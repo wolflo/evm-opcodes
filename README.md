@@ -4,7 +4,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 | Hex | Name        | Gas | Stack In            | Stack Out             | Mem / Storage Out     | Notes |
 | :---: | :---      | :---: | :---              | :---                  | :---                  | :--- |
 |   |               |   | top, bottom      | top, bottom           ||
-00  | STOP          |   |                       |                       || halt execution
+00  | STOP          | 0 |                       |                       || halt execution
 01  | ADD           |   | a, b                  | a + b	                || (u)int256 addition modulo 2\*\*256
 02  | MUL           |   | a, b                  | a \* b                || (u)int256 multiplication modulo 2\*\*256
 03  | SUB           |   | a, b                  | a - b	                || (u)int256 addition modulo 2\*\*256
@@ -52,28 +52,28 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 2D  | *invalid*
 2E  | *invalid*
 2F  | *invalid*
-30  | ADDRESS       |   |                       | address(this)         || address of executing contract
+30  | ADDRESS       | 2 |                       | address(this)         || address of executing contract
 31  | BALANCE       |   | addr                  | addr.balance          || balance, in wei
-32  | ORIGIN        |   |                       | tx.origin             || address that originated the tx
-33  | CALLER        |   |                       | msg.sender            || address of msg sender
-34  | CALLVALUE     |   |                       | msg.value             || msg value, in wei
+32  | ORIGIN        | 2 |                       | tx.origin             || address that originated the tx
+33  | CALLER        | 2 |                       | msg.sender            || address of msg sender
+34  | CALLVALUE     | 2 |                       | msg.value             || msg value, in wei
 35  | CALLDATALOAD  |   | idx                   | msg.data[idx:idx+32]  || read word from msg data at index `idx`
-36  | CALLDATASIZE  |   |                       | len(msg.data)         || length of msg data, in bytes
+36  | CALLDATASIZE  | 2 |                       | len(msg.data)         || length of msg data, in bytes
 37  | CALLDATACOPY  |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len= msg.data[ost:ost+len | copy msg data
-38  | CODESIZE      |   |                       | len(this.code)        || length of executing contract's code, in bytes
+38  | CODESIZE      | 2 |                       | len(this.code)        || length of executing contract's code, in bytes
 39  | CODECOPY      |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = this.code[ost:ost+len] | copy executing contract's bytecode
-3A  | GASPRICE      |   |                       | tx.gasprice           || gas price of tx, in wei per unit gas
+3A  | GASPRICE      | 2 |                       | tx.gasprice           || gas price of tx, in wei per unit gas
 3B  | EXTCODESIZE   |   | addr                  | len(addr.code)        || size of code at addr, in bytes
 3C  | EXTCODECOPY   |   |addr, dstOst, ost, len |                       | mem[dstOst:dstOst+len] = addr.code[ost:ost+len] | copy code from `addr`
-3D  |RETURNDATASIZE |   |                       | size                  || size of returned data from last external call, in bytes
+3D  |RETURNDATASIZE | 2 |                       | size                  || size of returned data from last external call, in bytes
 3E  |RETURNDATACOPY |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = returndata[ost:ost+len] | copy returned data from last external call
 3F  | EXTCODEHASH   |   | addr                  | hash                  || hash = addr.exists ? keccak256(addr.code) : 0
 40  | BLOCKHASH     |   | blockNum              |block.blockHash(blockNum)||
-41  | COINBASE      |   |                       | block.coinbase        || address of miner of current block
-42  | TIMESTAMP     |   |                       | block.timestamp       || timestamp of current block
-43  | NUMBER        |   |                       | block.number          || number of current block
-44  | DIFFICULTY    |   |                       | block.difficulty      || difficulty of current block
-45  | GASLIMIT      |   |                       | block.gaslimit        || gas limit of current block
+41  | COINBASE      | 2 |                       | block.coinbase        || address of miner of current block
+42  | TIMESTAMP     | 2 |                       | block.timestamp       || timestamp of current block
+43  | NUMBER        | 2 |                       | block.number          || number of current block
+44  | DIFFICULTY    | 2 |                       | block.difficulty      || difficulty of current block
+45  | GASLIMIT      | 2 |                       | block.gaslimit        || gas limit of current block
 46  | CHAINID       |   |                       | chain\_id             || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
 47  | SELFBALANCE   |   |                       | address(this).balance || balance of executing contract, in wei
 48  | *invalid*
@@ -84,7 +84,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 4D  | *invalid*
 4E  | *invalid*
 4F  | *invalid*
-50  | POP           |   | \_anon                |                       || remove item from top of stack and discards it
+50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discards it
 51  | MLOAD         |   | ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
 52  | MSTORE        |   | ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
 53  | MSTORE8       |   | ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
@@ -93,8 +93,8 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 56  | JUMP          |   | dst                   |                       || `$pc = dst`
 57  | JUMPI         |   | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            |   |                       | $pc                   || program counter
-59  | MSIZE         |   |                       | len[mem]              || size of memory in current execution context, in bytes
-5A  | GAS           |   |                       | gasRemaining          ||
+59  | MSIZE         | 2 |                       | len[mem]              || size of memory in current execution context, in bytes
+5A  | GAS           | 2 |                       | gasRemaining          ||
 5B  | JUMPDEST      |   |                       |                       || mark valid jump destination
 5C  | *invalid*
 5D  | *invalid*
@@ -247,7 +247,7 @@ EF  | *invalid*
 F0  | CREATE        |   | val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |   | gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
-F3  | RETURN        |   | ost, len                                          |               || return mem[ost:ost+len]
+F3  | RETURN        | 0 | ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |   | val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6  | *invalid*
@@ -257,6 +257,6 @@ F9  | *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB  | *invalid*
 FC  | *invalid*
-FD  | REVERT        |   | ost, len                                          |               || revert(mem[ost:ost+len])
+FD  | REVERT        | 0 | ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |   |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
