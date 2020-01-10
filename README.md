@@ -16,10 +16,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 09  | MULMOD        |   | a, b, N               | (a * b) % N           || (u)int256 multiplication modulo N
 0A  | EXP           |   | a, b                  | a \*\* b              || uint256 exponentiation modulo 2\*\*256
 0B  | SIGNEXTEND    |   | b, x                  | SIGNEXTEND(x, b)      || sign extend `x` from `(b + 1) * 8` bits to 256 bits.
-0C  | *invalid*
-0D  | *invalid*
-0E  | *invalid*
-0F  | *invalid*
+0C-0F| *invalid*
 10  | LT            | 3 | a, b                  | a < b                 || uint256 less-than
 11  | GT            | 3 | a, b                  | a > b                 || uint256 greater-than
 12  | SLT           | 3 | a, b                  | a < b                 || int256 less-than
@@ -34,24 +31,9 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 1B  | SHL           |   | shift, val            | val << shift          || shift left
 1C  | SHR           |   | shift, val            | val >> shift          || logical shift right
 1D  | SAR           |   | shift, val            | val >> shift          || arithmetic shift right
-1E  | *invalid*
-1F  | *invalid*
+1E-1F| *invalid*
 20  | SHA3          |   | ost, len           | keccak256(mem[ost:ost+len]) || keccak256
-21  | *invalid*
-22  | *invalid*
-23  | *invalid*
-24  | *invalid*
-25  | *invalid*
-26  | *invalid*
-27  | *invalid*
-28  | *invalid*
-29  | *invalid*
-2A  | *invalid*
-2B  | *invalid*
-2C  | *invalid*
-2D  | *invalid*
-2E  | *invalid*
-2F  | *invalid*
+21-2F| *invalid*
 30  | ADDRESS       | 2 |                       | address(this)         || address of executing contract
 31  | BALANCE       |   | addr                  | addr.balance          || balance, in wei
 32  | ORIGIN        | 2 |                       | tx.origin             || address that originated the tx
@@ -76,14 +58,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 45  | GASLIMIT      | 2 |                       | block.gaslimit        || gas limit of current block
 46  | CHAINID       |   |                       | chain\_id             || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
 47  | SELFBALANCE   |   |                       | address(this).balance || balance of executing contract, in wei
-48  | *invalid*
-49  | *invalid*
-4A  | *invalid*
-4B  | *invalid*
-4C  | *invalid*
-4D  | *invalid*
-4E  | *invalid*
-4F  | *invalid*
+48-4F| *invalid*
 50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discards it
 51  | MLOAD         | 3 | ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
 52  | MSTORE        | 3 | ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
@@ -96,10 +71,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 59  | MSIZE         | 2 |                       | len[mem]              || size of memory in current execution context, in bytes
 5A  | GAS           | 2 |                       | gasRemaining          ||
 5B  | JUMPDEST      |   |                       |                       || mark valid jump destination
-5C  | *invalid*
-5D  | *invalid*
-5E  | *invalid*
-5F  | *invalid*
+5C-5F| *invalid*
 60  | PUSH1         | 3 |                       | uint8                 || push 1-byte value onto stack
 61  | PUSH2         | 3 |                       | uint16                || push 2-byte value onto stack
 62  | PUSH3         | 3 |                       | uint24                || push 3-byte value onto stack
@@ -169,94 +141,16 @@ A1  | LOG1          |   | ost, len, topic0      |                       || LOG1(
 A2  | LOG2          |   | ost, len, topic0, topic1 |                    || LOG1(memory[ost:ost+len], topic0, topic1)
 A3  | LOG3          |   | ost, len, topic0, topic1, topic2 |            || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
 A4  | LOG4          |   | ost, len, topic0, topic1, topic2, topic3 |    || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
-A5  | *invalid*
-A6  | *invalid*
-A7  | *invalid*
-A8  | *invalid*
-A9  | *invalid*
-AA  | *invalid*
-AB  | *invalid*
-AC  | *invalid*
-AD  | *invalid*
-AE  | *invalid*
-AF  | *invalid*
-B0  | *invalid*
-B1  | *invalid*
-B2  | *invalid*
-B3  | *invalid*
-B4  | *invalid*
-B5  | *invalid*
-B6  | *invalid*
-B7  | *invalid*
-B8  | *invalid*
-B9  | *invalid*
-BA  | *invalid*
-BB  | *invalid*
-BC  | *invalid*
-BD  | *invalid*
-BE  | *invalid*
-BF  | *invalid*
-C0  | *invalid*
-C1  | *invalid*
-C2  | *invalid*
-C3  | *invalid*
-C4  | *invalid*
-C5  | *invalid*
-C6  | *invalid*
-C7  | *invalid*
-C8  | *invalid*
-C9  | *invalid*
-CA  | *invalid*
-CB  | *invalid*
-CC  | *invalid*
-CD  | *invalid*
-CE  | *invalid*
-CF  | *invalid*
-D0  | *invalid*
-D1  | *invalid*
-D2  | *invalid*
-D3  | *invalid*
-D4  | *invalid*
-D5  | *invalid*
-D6  | *invalid*
-D7  | *invalid*
-D8  | *invalid*
-D9  | *invalid*
-DA  | *invalid*
-DB  | *invalid*
-DC  | *invalid*
-DD  | *invalid*
-DE  | *invalid*
-DF  | *invalid*
-E0  | *invalid*
-E1  | *invalid*
-E2  | *invalid*
-E3  | *invalid*
-E4  | *invalid*
-E5  | *invalid*
-E6  | *invalid*
-E7  | *invalid*
-E8  | *invalid*
-E9  | *invalid*
-EA  | *invalid*
-EB  | *invalid*
-EC  | *invalid*
-ED  | *invalid*
-EE  | *invalid*
-EF  | *invalid*
+A5-EF| *invalid*
 F0  | CREATE        |   | val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |   | gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3  | RETURN        | 0 | ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |   | val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
-F6  | *invalid*
-F7  | *invalid*
-F8  | *invalid*
-F9  | *invalid*
+F6-F9| *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
-FB  | *invalid*
-FC  | *invalid*
+FB-FC| *invalid*
 FD  | REVERT        | 0 | ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |   |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
