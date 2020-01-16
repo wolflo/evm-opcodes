@@ -6,16 +6,16 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 |   |               |   | top, bottom      | top, bottom           ||
 00  | STOP          | 0 |                       |                       || halt execution
 01  | ADD           | 3 | a, b                  | a + b	                || (u)int256 addition modulo 2\*\*256
-02  | MUL           |   | a, b                  | a \* b                || (u)int256 multiplication modulo 2\*\*256
+02  | MUL           | 5 | a, b                  | a \* b                || (u)int256 multiplication modulo 2\*\*256
 03  | SUB           | 3 | a, b                  | a - b	                || (u)int256 addition modulo 2\*\*256
-04  | DIV           |   | a, b                  | a // b                || uint256 division
-05  | SDIV          |   | a, b                  | a // b                || int256 division
-06  | MOD           |   | a, b                  | a % b                 || uint256 modulus
-07  | SMOD          |   | a, b                  | a % b                 || int256 modulus
-08  | ADDMOD        |   | a, b, N               | (a + b) % N           || (u)int256 addition modulo N
-09  | MULMOD        |   | a, b, N               | (a * b) % N           || (u)int256 multiplication modulo N
+04  | DIV           | 5 | a, b                  | a // b                || uint256 division
+05  | SDIV          | 5 | a, b                  | a // b                || int256 division
+06  | MOD           | 5 | a, b                  | a % b                 || uint256 modulus
+07  | SMOD          | 5 | a, b                  | a % b                 || int256 modulus
+08  | ADDMOD        | 8 | a, b, N               | (a + b) % N           || (u)int256 addition modulo N
+09  | MULMOD        | 8 | a, b, N               | (a * b) % N           || (u)int256 multiplication modulo N
 0A  | EXP           |   | a, b                  | a \*\* b              || uint256 exponentiation modulo 2\*\*256
-0B  | SIGNEXTEND    |   | b, x                  | SIGNEXTEND(x, b)      || sign extend `x` from `(b + 1) * 8` bits to 256 bits.
+0B  | SIGNEXTEND    | 5 | b, x                  | SIGNEXTEND(x, b)      || sign extend `x` from `(b + 1) * 8` bits to 256 bits.
 0C-0F| *invalid*
 10  | LT            | 3 | a, b                  | a < b                 || uint256 less-than
 11  | GT            | 3 | a, b                  | a > b                 || uint256 greater-than
@@ -65,8 +65,8 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 53  | MSTORE8       | 3 | ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |   | key                   | storage[key]          || read word from storage
 55  | SSTORE        |   | key, val              |                       | storage[key] = val | write word to storage
-56  | JUMP          |   | dst                   |                       || `$pc = dst`
-57  | JUMPI         |   | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
+56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
+57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            |   |                       | $pc                   || program counter
 59  | MSIZE         | 2 |                       | len[mem]              || size of memory in current execution context, in bytes
 5A  | GAS           | 2 |                       | gasRemaining          ||
