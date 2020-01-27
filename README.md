@@ -35,7 +35,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 20  | SHA3          |   | ost, len           | keccak256(mem[ost:ost+len]) || keccak256
 21-2F| *invalid*
 30  | ADDRESS       | 2 |                       | address(this)         || address of executing contract
-31  | BALANCE       |   | addr                  | addr.balance          || balance, in wei
+31  | BALANCE       |700| addr                  | addr.balance          || balance, in wei
 32  | ORIGIN        | 2 |                       | tx.origin             || address that originated the tx
 33  | CALLER        | 2 |                       | msg.sender            || address of msg sender
 34  | CALLVALUE     | 2 |                       | msg.value             || msg value, in wei
@@ -45,26 +45,26 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 38  | CODESIZE      | 2 |                       | len(this.code)        || length of executing contract's code, in bytes
 39  | CODECOPY      |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = this.code[ost:ost+len] | copy executing contract's bytecode
 3A  | GASPRICE      | 2 |                       | tx.gasprice           || gas price of tx, in wei per unit gas
-3B  | EXTCODESIZE   |   | addr                  | len(addr.code)        || size of code at addr, in bytes
+3B  | EXTCODESIZE   |700| addr                  | len(addr.code)        || size of code at addr, in bytes
 3C  | EXTCODECOPY   |   |addr, dstOst, ost, len |                       | mem[dstOst:dstOst+len] = addr.code[ost:ost+len] | copy code from `addr`
 3D  |RETURNDATASIZE | 2 |                       | size                  || size of returned data from last external call, in bytes
 3E  |RETURNDATACOPY |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = returndata[ost:ost+len] | copy returned data from last external call
-3F  | EXTCODEHASH   |   | addr                  | hash                  || hash = addr.exists ? keccak256(addr.code) : 0
+3F  | EXTCODEHASH   |700| addr                  | hash                  || hash = addr.exists ? keccak256(addr.code) : 0
 40  | BLOCKHASH     |   | blockNum              |block.blockHash(blockNum)||
 41  | COINBASE      | 2 |                       | block.coinbase        || address of miner of current block
 42  | TIMESTAMP     | 2 |                       | block.timestamp       || timestamp of current block
 43  | NUMBER        | 2 |                       | block.number          || number of current block
 44  | DIFFICULTY    | 2 |                       | block.difficulty      || difficulty of current block
 45  | GASLIMIT      | 2 |                       | block.gaslimit        || gas limit of current block
-46  | CHAINID       |   |                       | chain\_id             || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
-47  | SELFBALANCE   |   |                       | address(this).balance || balance of executing contract, in wei
+46  | CHAINID       | 2 |                       | chain\_id             || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
+47  | SELFBALANCE   | 5 |                       | address(this).balance || balance of executing contract, in wei
 48-4F| *invalid*
 50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discards it
 51  | MLOAD         | 3 | ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
 52  | MSTORE        | 3 | ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
 53  | MSTORE8       | 3 | ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
-54  | SLOAD         |   | key                   | storage[key]          || read word from storage
-55  | SSTORE        |   | key, val              |                       | storage[key] = val | write word to storage
+54  | SLOAD         |800| key                   | storage[key]          || read word from storage
+55  | SSTORE        |[A1](#a1-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
 57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            |   |                       | $pc                   || program counter
@@ -154,3 +154,40 @@ FB-FC| *invalid*
 FD  | REVERT        | 0 | ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |   |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
+
+
+
+
+# Appendix - Opcode Notes and Complex Gas Costs
+
+## A1: SSTORE
+This gets messy. See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
+
+Terms:
+- `og_val`: the value of the storage slot if the current transaction is reverted
+- `current_val`: the value of the storage slot immediately *before* the `sstore` op in question
+- `new_val`: the value of the storage slot immediately *after* the `sstore` op in question
+
+Gas Calculation:
+- **If** `new_val == current_val` (no-op):
+    - `800` gas deducted
+- **If** `new_val != current_val`:
+    - **If** `current_val == og_val` ("clean slot", not yet updated in current execution context):
+        - **If** `og_val == 0` (slot started zero, currently still zero, now being changed to nonzero):
+            - `20000` gas deducted
+        - **Else** (slot started nonzero, currently still same nonzero value, now being changed):
+            - `5000` gas deducted and..
+            - **If** `new_val == 0` (the value to store is 0):
+                - add `15000` gas to refund counter
+    - **If**: `current_val != og_val` ("dirty slot", already updated in current execution context):
+        - `800` gas deducted and..
+       - **If** `og_val != 0` (execution context started with a nonzero value in slot):
+            - **If** `current_val == 0` (slot started nonzero, currently zero, now being changed to nonzero):
+                - deduct `15000` gas from refund counter
+            - **If** `new_value == 0` (slot started nonzero, currently still nonzero, now being changed to zero):
+                - add `15000` gas to refund counter
+        - **If** `new_val == og_val` (slot is reset to the value it started with):
+            - **If** `og_val == 0` (slot started zero, currently nonzero, now being reset to zero):
+                - add `19200` gas to refund counter
+            - **Else** (slot started nonzero, currently different nonzero value, now reset to orig. nonzero value):
+                - add `4200` gas to refund counter
