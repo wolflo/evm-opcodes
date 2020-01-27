@@ -28,9 +28,9 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 18  | XOR           | 3 | a, b                  | a ^ b                 || bitwise XOR
 19  | NOT           | 3 | a                     | ~a                    || bitwise NOT
 1A  | BYTE          | 3 | i, x                  | (x >> (248 - i * 8)) && 0xFF || `i`th byte of (u)int256 `x`, from the left
-1B  | SHL           |   | shift, val            | val << shift          || shift left
-1C  | SHR           |   | shift, val            | val >> shift          || logical shift right
-1D  | SAR           |   | shift, val            | val >> shift          || arithmetic shift right
+1B  | SHL           | 3 | shift, val            | val << shift          || shift left
+1C  | SHR           | 3 | shift, val            | val >> shift          || logical shift right
+1D  | SAR           | 3 | shift, val            | val >> shift          || arithmetic shift right
 1E-1F| *invalid*
 20  | SHA3          |   | ost, len           | keccak256(mem[ost:ost+len]) || keccak256
 21-2F| *invalid*
@@ -50,7 +50,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 3D  |RETURNDATASIZE | 2 |                       | size                  || size of returned data from last external call, in bytes
 3E  |RETURNDATACOPY |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = returndata[ost:ost+len] | copy returned data from last external call
 3F  | EXTCODEHASH   |700| addr                  | hash                  || hash = addr.exists ? keccak256(addr.code) : 0
-40  | BLOCKHASH     |   | blockNum              |block.blockHash(blockNum)||
+40  | BLOCKHASH     |20 | blockNum              |block.blockHash(blockNum)||
 41  | COINBASE      | 2 |                       | block.coinbase        || address of miner of current block
 42  | TIMESTAMP     | 2 |                       | block.timestamp       || timestamp of current block
 43  | NUMBER        | 2 |                       | block.number          || number of current block
@@ -60,17 +60,17 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 47  | SELFBALANCE   | 5 |                       | address(this).balance || balance of executing contract, in wei
 48-4F| *invalid*
 50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discard it
-51  | MLOAD         | 3 | ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
-52  | MSTORE        | 3 | ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
-53  | MSTORE8       | 3 | ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
+51  | MLOAD         |[3\*](#a3-memory-expansion-cost)| ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
+52  | MSTORE        |[3\*](#a3-memory-expansion-cost)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
+53  | MSTORE8       |[3\*](#a3-memory-expansion-cost)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |800| key                   | storage[key]          || read word from storage
 55  | SSTORE        |[A2](#a2-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
 57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
-58  | PC            |   |                       | $pc                   || program counter
+58  | PC            | 2 |                       | $pc                   || program counter
 59  | MSIZE         | 2 |                       | len[mem]              || size of memory in current execution context, in bytes
 5A  | GAS           | 2 |                       | gasRemaining          ||
-5B  | JUMPDEST      |   |                       |                       || mark valid jump destination
+5B  | JUMPDEST      | 1 |                       |                       || mark valid jump destination
 5C-5F| *invalid*
 60  | PUSH1         | 3 |                       | uint8                 || push 1-byte value onto stack
 61  | PUSH2         | 3 |                       | uint16                || push 2-byte value onto stack
@@ -145,13 +145,13 @@ A5-EF| *invalid*
 F0  | CREATE        |   | val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |   | gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
-F3  | RETURN        | 0 | ost, len                                          |               || return mem[ost:ost+len]
+F3  | RETURN        |[0\*](#a3-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |   | val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9| *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
-FD  | REVERT        | 0 | ost, len                                          |               || revert(mem[ost:ost+len])
+FD  | REVERT        |[0\*](#a3-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
 
@@ -169,6 +169,7 @@ Gas Calculation:
     - `32000` gas added to base cost
 - `4 * bytes_zero` gas added to base cost for every zero byte of tx data
 - `16 * bytes_nonzero` gas added to base cost for every nonzero byte of tx data
+
 
 ## A2: SSTORE
 This gets messy. See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
@@ -201,6 +202,12 @@ Gas Calculation:
                 - add `19200` gas to refund counter
             - **Else** (slot started nonzero, currently different nonzero value, now reset to orig. nonzero value):
                 - add `4200` gas to refund counter
+
+## A3: Memory Expansion Cost
+An additional gas cost is paid by any operation that expands the memory that is in use. This memory expansion cost is dependent on the existing memory size and is `0` if the op does not touch a memory address higher than the existing highest touched memory address. Note that the following ops pay a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`
+
+Gas Calculation:
+- TODO
 
 ## AF: Invalid
 On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
