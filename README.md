@@ -59,12 +59,12 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 46  | CHAINID       | 2 |                       | chain\_id             || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
 47  | SELFBALANCE   | 5 |                       | address(this).balance || balance of executing contract, in wei
 48-4F| *invalid*
-50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discards it
+50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discard it
 51  | MLOAD         | 3 | ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
 52  | MSTORE        | 3 | ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
 53  | MSTORE8       | 3 | ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |800| key                   | storage[key]          || read word from storage
-55  | SSTORE        |[A1](#a1-sstore)   | key, val              |                       | storage[key] = val | write word to storage
+55  | SSTORE        |[A2](#a2-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
 57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            |   |                       | $pc                   || program counter
@@ -152,7 +152,7 @@ F6-F9| *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
 FD  | REVERT        | 0 | ost, len                                          |               || revert(mem[ost:ost+len])
-FE  | INVALID       |   |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
+FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
 
 
@@ -160,7 +160,17 @@ FF  | SELFDESTRUCT  |   | addr                                              |   
 
 # Appendix - Opcode Notes and Complex Gas Costs
 
-## A1: SSTORE
+## A1: Intrinsic Gas
+Intrinsic gas is the amount of gas paid prior to execution of a transaction. That is, the gas paid by the initiator of a transaction, which will always be an externally-owned account, before any state updates are made or any code is executed.
+
+Gas Calculation:
+- `21000` gas base cost
+- **If** `msg.to == null` (contract creation tx):
+    - `32000` gas added to base cost
+- `4 * bytes_zero` gas added to base cost for every zero byte of tx data
+- `16 * bytes_nonzero` gas added to base cost for every nonzero byte of tx data
+
+## A2: SSTORE
 This gets messy. See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
 
 Terms:
@@ -191,3 +201,6 @@ Gas Calculation:
                 - add `19200` gas to refund counter
             - **Else** (slot started nonzero, currently different nonzero value, now reset to orig. nonzero value):
                 - add `4200` gas to refund counter
+
+## AF: Invalid
+On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
