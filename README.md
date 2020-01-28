@@ -65,7 +65,7 @@ Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.
 52  | MSTORE        |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
 53  | MSTORE8       |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |800| key                   | storage[key]          || read word from storage
-55  | SSTORE        |[AA](#aa-sstore)   | key, val              |                       | storage[key] = val | write word to storage
+55  | SSTORE        |[A6](#a6-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
 57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            | 2 |                       | $pc                   || program counter
@@ -137,24 +137,24 @@ Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.
 9D  | SWAP14        | 3 | a, ..., b             | b, ..., a             ||
 9E  | SWAP15        | 3 | a, ..., b             | b, ..., a             ||
 9F  | SWAP16        | 3 | a, ..., b             | b, ..., a             ||
-A0  | LOG0          |   | ost, len              |                       || LOG0(memory[ost:ost+len])
-A1  | LOG1          |   | ost, len, topic0      |                       || LOG1(memory[ost:ost+len], topic0)
-A2  | LOG2          |   | ost, len, topic0, topic1 |                    || LOG1(memory[ost:ost+len], topic0, topic1)
-A3  | LOG3          |   | ost, len, topic0, topic1, topic2 |            || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
-A4  | LOG4          |   | ost, len, topic0, topic1, topic2, topic3 |    || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
+A0  | LOG0          |[A7](#a7-log-operations)| ost, len              |                       || LOG0(memory[ost:ost+len])
+A1  | LOG1          |[A7](#a7-log-operations)| ost, len, topic0      |                       || LOG1(memory[ost:ost+len], topic0)
+A2  | LOG2          |[A7](#a7-log-operations)| ost, len, topic0, topic1 |                    || LOG1(memory[ost:ost+len], topic0, topic1)
+A3  | LOG3          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2 |            || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
+A4  | LOG4          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2, topic3 |    || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF| *invalid*
-F0  | CREATE        |   | val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
-F1  | CALL          |   | gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
+F0  | CREATE        |32000[\*](#a2-memory-expansion-cost)| val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
+F1  | CALL          |[A8](#a8-call)| gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3  | RETURN        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
-F5  | CREATE2       |   | val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
+F5  | CREATE2       |[AB](#ab-create2)| val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9| *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
 FD  | REVERT        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
-FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
+FF  | SELFDESTRUCT  |[AC](#ac-selfdestruct)| addr                                              |               || destroy contract and sends all funds to `addr`
 
 
 
@@ -175,23 +175,28 @@ Gas Calculation:
 ## A2: Memory Expansion
 An additional gas cost is paid by any operation that expands the memory that is in use.
 This memory expansion cost is dependent on the existing memory size and is `0` if the op does not reference a memory address higher than the existing highest referenced memory address.
-A useful fact to note is that the memory cost function is linear up to 724 bytes of memory used, at which point additional memory costs substantially more.
-Note also that the following ops pay a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`.
+A reference is any read, write, or other usage of memory (such as in `CALL`).
 
 Terms:
 - `new_mem_size`: the highest referenced memory address after the operation in question (in bytes)
 - `new_mem_size_words = (new_mem_size + 31) // 32`: number of (32-byte) words required for memory after the operation in question
+- <code><em>C<sub>mem</sub>(machine_state)</em></code>: the memory cost function for a given machine state
 
 Gas Calculation:
-><code>gas\_cost = <em>C<sub>mem</sub>(new_state)</em> - <em>C<sub>mem</sub>(old_state)</em></code>
-><code>gas\_cost = (new\_mem\_size\_words ^ 2 / 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
+- <code>gas\_cost = <em>C<sub>mem</sub>(new_state)</em> - <em>C<sub>mem</sub>(old_state)</em></code>
+- <code>gas\_cost = (new\_mem\_size\_words ^ 2 / 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
+
+Useful Notes:
+- The following ops incur a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`, `CREATE`.
+- Referencing a zero length range does not require memory to be extended to the beginning of the range.
+- The memory cost function is linear up to 724 bytes of memory used, at which point additional memory costs substantially more.
 
 ## A3: EXP
 Terms:
 - `byte_len_exponent`: the number of bytes in the exponent (exponent is `b` in the stack representation above)
 
 Gas Calculation:
-- `gas_cost = 10 + 10 * byte_len_exponent`
+- `gas_cost = 10 + 50 * byte_len_exponent`
 
 ## A4: SHA3
 Terms:
@@ -202,14 +207,14 @@ Terms:
 Gas Calculation:
 - `gas_cost = 30 + 6 * data_size_words + mem_expansion_cost`
 
-# A5: COPY Operations
+## A5: COPY Operations
 The following applies for the operations `CALLDATACOPY`, `CODECOPY`, `EXTCODECOPY`, and `RETURNDATACOPY`.
 Note that `EXTCODECOPY` has a different `static_cost` than the other ops and also takes its `len` parameter from a different index on the stack.
 
 Terms:
 - `static_cost`: the constant base cost for the operation
     - `static_cost = 3` for `CALLDATACOPY`, `CODECOPY`, `RETURNDATACOPY`
-    - `static_cost = 20` for `EXTCODECOPY`
+    - `static_cost = 700` for `EXTCODECOPY`
 - `data_size`: size of the data to copy in bytes (`len` in the stack representation above)
 - `data_size_words = (data_size + 31) // 32`: number of (32-byte) words in the data to copy
 - `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
@@ -217,9 +222,14 @@ Terms:
 Gas Calculation:
 - `gas_cost = static_cost + 3 * data_size_words + mem_expansion_cost`
 
-## AA: SSTORE
+
+## A6: SSTORE
 This gets messy.
 See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
+The short version is the cost of an `SSTORE` op is dependent on:
+1. Zero vs. nonzero values - storing nonzero values is more costly than storing zero
+1. The current value of the slot vs. the value to store - changing the value of a slot is more costly than not changing it
+2. "Dirty" vs. "clean" slot - changing a slot that has not yet been changed within the current execution context is more costly than changing a slot that has already been changed
 
 Terms:
 - `og_val`: the value of the storage slot if the current transaction is reverted
@@ -228,6 +238,7 @@ Terms:
 
 Gas Calculation:
 - `gas_cost = 0`
+- `gas_refund = 0`
 - **If** `new_val == current_val` (no-op):
     - `gas_cost += 800`
 - **If** `new_val != current_val`:
@@ -250,6 +261,41 @@ Gas Calculation:
                 - `gas_refund += 19200`
             - **Else** (slot started nonzero, currently different nonzero value, now reset to orig. nonzero value):
                 - `gas_refund += 4200`
+
+## A7: LOG\* Operations
+Terms:
+- `num_topics`: the \* of the LOG\* op. e.g. LOG0 has `num_topics = 0`, LOG4 has `num_topics = 4`
+- `data_size`: size of the data to log in bytes (`len` in the stack representation above). Note that for `LOG*` ops gas is paid per byte of data (not per word).
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
+
+Gas Calculation:
+`gas_cost = 375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
+
+## A8: CALL
+TODO
+
+## AB: CREATE2
+Note that `CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
+
+Terms:
+- `data_size`: size of the init code in bytes (`len` in the stack representation above)
+- `data_size_words = (data_size + 31) // 32`: number of (32-byte) words in the init code
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
+
+Gas Calculation:
+`gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost`
+
+## AC: SELFDESTRUCT
+Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new address being added to the state trie. If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred. "Empty", in this case is defined according to [EIP161](https://eips.ethereum.org/EIPS/eip-161) (balance == nonce == code == 0x).
+Terms:
+`target_addr`: The recipient of the self-destructing contracts funds (`addr` in the stack representation above)
+`context_addr`: The address of the current execution context (e.g. what would be placed on the stack by an `ADDRESS` op)
+
+Gas Calculation:
+- `gas_cost = 5000`: base cost
+- `gas_refund = 24000`: base refund
+- **If** `balance(context_addr) > 0 && is_empty(target_addr)` (sending funds to a previously empty address):
+    - `gas_cost += 25000`
 
 ## AF: INVALID
 On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
