@@ -1,5 +1,6 @@
 # EVM Opcodes
-An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/). Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) and the [Jello Paper](https://jellopaper.org/evm.html).
+An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/).
+Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm.html), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
 
 | Hex | Name        | Gas | Stack In            | Stack Out             | Mem / Storage Out     | Notes |
 | :---: | :---      | :---: | :---              | :---                  | :---                  | :--- |
@@ -14,7 +15,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 07  | SMOD          | 5 | a, b                  | a % b                 || int256 modulus
 08  | ADDMOD        | 8 | a, b, N               | (a + b) % N           || (u)int256 addition modulo N
 09  | MULMOD        | 8 | a, b, N               | (a * b) % N           || (u)int256 multiplication modulo N
-0A  | EXP           |   | a, b                  | a \*\* b              || uint256 exponentiation modulo 2\*\*256
+0A  | EXP           |[A3](#a3-exp)| a, b                  | a \*\* b              || uint256 exponentiation modulo 2\*\*256
 0B  | SIGNEXTEND    | 5 | b, x                  | SIGNEXTEND(x, b)      || sign extend `x` from `(b + 1) * 8` bits to 256 bits.
 0C-0F| *invalid*
 10  | LT            | 3 | a, b                  | a < b                 || uint256 less-than
@@ -32,7 +33,7 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 1C  | SHR           | 3 | shift, val            | val >> shift          || logical shift right
 1D  | SAR           | 3 | shift, val            | val >> shift          || arithmetic shift right
 1E-1F| *invalid*
-20  | SHA3          |   | ost, len           | keccak256(mem[ost:ost+len]) || keccak256
+20  | SHA3          |[A4](#a4-sha3)| ost, len           | keccak256(mem[ost:ost+len]) || keccak256
 21-2F| *invalid*
 30  | ADDRESS       | 2 |                       | address(this)         || address of executing contract
 31  | BALANCE       |700| addr                  | addr.balance          || balance, in wei
@@ -41,14 +42,14 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 34  | CALLVALUE     | 2 |                       | msg.value             || msg value, in wei
 35  | CALLDATALOAD  | 3 | idx                   | msg.data[idx:idx+32]  || read word from msg data at index `idx`
 36  | CALLDATASIZE  | 2 |                       | len(msg.data)         || length of msg data, in bytes
-37  | CALLDATACOPY  |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len= msg.data[ost:ost+len | copy msg data
+37  | CALLDATACOPY  |[A5](#a5-copy-operations)| dstOst, ost, len      |                       | mem[dstOst:dstOst+len= msg.data[ost:ost+len | copy msg data
 38  | CODESIZE      | 2 |                       | len(this.code)        || length of executing contract's code, in bytes
-39  | CODECOPY      |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = this.code[ost:ost+len] | copy executing contract's bytecode
+39  | CODECOPY      |[A5](#a5-copy-operations)| dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = this.code[ost:ost+len] | copy executing contract's bytecode
 3A  | GASPRICE      | 2 |                       | tx.gasprice           || gas price of tx, in wei per unit gas
 3B  | EXTCODESIZE   |700| addr                  | len(addr.code)        || size of code at addr, in bytes
-3C  | EXTCODECOPY   |   |addr, dstOst, ost, len |                       | mem[dstOst:dstOst+len] = addr.code[ost:ost+len] | copy code from `addr`
+3C  | EXTCODECOPY   |[A5](#a5-copy-operations)|addr, dstOst, ost, len |                       | mem[dstOst:dstOst+len] = addr.code[ost:ost+len] | copy code from `addr`
 3D  |RETURNDATASIZE | 2 |                       | size                  || size of returned data from last external call, in bytes
-3E  |RETURNDATACOPY |   | dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = returndata[ost:ost+len] | copy returned data from last external call
+3E  |RETURNDATACOPY |[A5](#a5-copy-operations)| dstOst, ost, len      |                       | mem[dstOst:dstOst+len] = returndata[ost:ost+len] | copy returned data from last external call
 3F  | EXTCODEHASH   |700| addr                  | hash                  || hash = addr.exists ? keccak256(addr.code) : 0
 40  | BLOCKHASH     |20 | blockNum              |block.blockHash(blockNum)||
 41  | COINBASE      | 2 |                       | block.coinbase        || address of miner of current block
@@ -60,11 +61,11 @@ An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/
 47  | SELFBALANCE   | 5 |                       | address(this).balance || balance of executing contract, in wei
 48-4F| *invalid*
 50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discard it
-51  | MLOAD         |[3\*](#a3-memory-expansion-cost)| ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
-52  | MSTORE        |[3\*](#a3-memory-expansion-cost)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
-53  | MSTORE8       |[3\*](#a3-memory-expansion-cost)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
+51  | MLOAD         |3[\*](#a2-memory-expansion-cost)| ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
+52  | MSTORE        |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
+53  | MSTORE8       |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |800| key                   | storage[key]          || read word from storage
-55  | SSTORE        |[A2](#a2-sstore)   | key, val              |                       | storage[key] = val | write word to storage
+55  | SSTORE        |[AA](#aa-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
 57  | JUMPI         |10 | dst, condition        |                       || `$pc = condition ? dst : $pc + 1`
 58  | PC            | 2 |                       | $pc                   || program counter
@@ -145,34 +146,80 @@ A5-EF| *invalid*
 F0  | CREATE        |   | val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |   | gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
-F3  | RETURN        |[0\*](#a3-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
+F3  | RETURN        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |   | val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9| *invalid*
 FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
-FD  | REVERT        |[0\*](#a3-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
+FD  | REVERT        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |   | addr                                              |               || destroy contract and sends all funds to `addr`
 
 
 
 
-# Appendix - Opcode Notes and Complex Gas Costs
+# Appendix - Opcode Notes and Dynamic Gas Costs
 
 ## A1: Intrinsic Gas
-Intrinsic gas is the amount of gas paid prior to execution of a transaction. That is, the gas paid by the initiator of a transaction, which will always be an externally-owned account, before any state updates are made or any code is executed.
+Intrinsic gas is the amount of gas paid prior to execution of a transaction.
+That is, the gas paid by the initiator of a transaction, which will always be an externally-owned account, before any state updates are made or any code is executed.
 
 Gas Calculation:
-- `21000` gas base cost
+- `gas_cost = 21000`: base cost
 - **If** `msg.to == null` (contract creation tx):
-    - `32000` gas added to base cost
-- `4 * bytes_zero` gas added to base cost for every zero byte of tx data
-- `16 * bytes_nonzero` gas added to base cost for every nonzero byte of tx data
+    - `gas_cost += 32000`
+- `gas_cost += 4 * bytes_zero`: gas added to base cost for every zero byte of memory data
+- `gas_cost += 16 * bytes_nonzero`: gas added to base cost for every nonzero byte of memory data
 
+## A2: Memory Expansion
+An additional gas cost is paid by any operation that expands the memory that is in use.
+This memory expansion cost is dependent on the existing memory size and is `0` if the op does not reference a memory address higher than the existing highest referenced memory address.
+A useful fact to note is that the memory cost function is linear up to 724 bytes of memory used, at which point additional memory costs substantially more.
+Note also that the following ops pay a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`.
 
-## A2: SSTORE
-This gets messy. See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
+Terms:
+- `new_mem_size`: the highest referenced memory address after the operation in question (in bytes)
+- `new_mem_size_words = (new_mem_size + 31) // 32`: number of (32-byte) words required for memory after the operation in question
+
+Gas Calculation:
+><code>gas\_cost = <em>C<sub>mem</sub>(new_state)</em> - <em>C<sub>mem</sub>(old_state)</em></code>
+><code>gas\_cost = (new\_mem\_size\_words ^ 2 / 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
+
+## A3: EXP
+Terms:
+- `byte_len_exponent`: the number of bytes in the exponent (exponent is `b` in the stack representation above)
+
+Gas Calculation:
+- `gas_cost = 10 + 10 * byte_len_exponent`
+
+## A4: SHA3
+Terms:
+- `data_size`: size of the message to hash in bytes (`len` in the stack representation above)
+- `data_size_words = (data_size + 31) // 32`: number of (32-byte) words in the message to hash
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
+
+Gas Calculation:
+- `gas_cost = 30 + 6 * data_size_words + mem_expansion_cost`
+
+# A5: COPY Operations
+The following applies for the operations `CALLDATACOPY`, `CODECOPY`, `EXTCODECOPY`, and `RETURNDATACOPY`.
+Note that `EXTCODECOPY` has a different `static_cost` than the other ops and also takes its `len` parameter from a different index on the stack.
+
+Terms:
+- `static_cost`: the constant base cost for the operation
+    - `static_cost = 3` for `CALLDATACOPY`, `CODECOPY`, `RETURNDATACOPY`
+    - `static_cost = 20` for `EXTCODECOPY`
+- `data_size`: size of the data to copy in bytes (`len` in the stack representation above)
+- `data_size_words = (data_size + 31) // 32`: number of (32-byte) words in the data to copy
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
+
+Gas Calculation:
+- `gas_cost = static_cost + 3 * data_size_words + mem_expansion_cost`
+
+## AA: SSTORE
+This gets messy.
+See [EIP-2200](https://eips.ethereum.org/EIPS/eip-2200), implemented in Istanbul hardfork.
 
 Terms:
 - `og_val`: the value of the storage slot if the current transaction is reverted
@@ -180,34 +227,29 @@ Terms:
 - `new_val`: the value of the storage slot immediately *after* the `sstore` op in question
 
 Gas Calculation:
+- `gas_cost = 0`
 - **If** `new_val == current_val` (no-op):
-    - `800` gas deducted
+    - `gas_cost += 800`
 - **If** `new_val != current_val`:
     - **If** `current_val == og_val` ("clean slot", not yet updated in current execution context):
         - **If** `og_val == 0` (slot started zero, currently still zero, now being changed to nonzero):
-            - `20000` gas deducted
+            - `gas_cost += 20000`
         - **Else** (slot started nonzero, currently still same nonzero value, now being changed):
-            - `5000` gas deducted and..
+            - `gas_cost += 5000` and..
             - **If** `new_val == 0` (the value to store is 0):
-                - add `15000` gas to refund counter
+                - `gas_refund += 15000`
     - **If**: `current_val != og_val` ("dirty slot", already updated in current execution context):
-        - `800` gas deducted and..
+        - `gas_cost += 800` and..
        - **If** `og_val != 0` (execution context started with a nonzero value in slot):
             - **If** `current_val == 0` (slot started nonzero, currently zero, now being changed to nonzero):
-                - deduct `15000` gas from refund counter
+                - `gas_refund -= 15000`
             - **If** `new_value == 0` (slot started nonzero, currently still nonzero, now being changed to zero):
-                - add `15000` gas to refund counter
+                - `gas_refund += 15000`
         - **If** `new_val == og_val` (slot is reset to the value it started with):
             - **If** `og_val == 0` (slot started zero, currently nonzero, now being reset to zero):
-                - add `19200` gas to refund counter
+                - `gas_refund += 19200`
             - **Else** (slot started nonzero, currently different nonzero value, now reset to orig. nonzero value):
-                - add `4200` gas to refund counter
+                - `gas_refund += 4200`
 
-## A3: Memory Expansion Cost
-An additional gas cost is paid by any operation that expands the memory that is in use. This memory expansion cost is dependent on the existing memory size and is `0` if the op does not touch a memory address higher than the existing highest touched memory address. Note that the following ops pay a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`
-
-Gas Calculation:
-- TODO
-
-## AF: Invalid
+## AF: INVALID
 On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
