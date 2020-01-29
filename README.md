@@ -147,7 +147,7 @@ A4  | LOG4          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2,
 A5-EF| *invalid*
 F0  | CREATE        |32000[\*](#a2-memory-expansion-cost)| val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |[AB](#ab-call-operations)| gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
-F2  | CALLCODE      |[AB](#ab-call-operations)| gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
+F2  | CALLCODE      |[AB](#ab-call-operations)| gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3  | RETURN        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |[AB](#ab-call-operations)| gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |[A9](#a9-create2)| val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
@@ -160,7 +160,7 @@ FF  | SELFDESTRUCT  |[AA](#aa-selfdestruct)| addr                               
   
   
   
-# Appendix - Opcode Notes and Dynamic Gas Costs
+# Appendix - Dynamic Gas Costs
 
 ## A1: Intrinsic Gas
 Intrinsic gas is the amount of gas paid prior to execution of a transaction.
@@ -291,13 +291,13 @@ Gas Calculation:
 
 
 ## AA: SELFDESTRUCT
-Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new address being added to the state trie.
+Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new account being added to the state trie.
 If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
 Terms:
 - `target_addr`: the recipient of the self-destructing contract's funds (`addr` in the stack representation above)
-- `context_addr`: the address of the current execution context (e.g. what would be placed on the stack by an `ADDRESS` op)
+- `context_addr`: the address of the current execution context (e.g. what `ADDRESS` would put on the stack)
 
 Gas Calculation:
 - `gas_cost = 5000`: base cost
@@ -311,6 +311,8 @@ Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` ops.
 Note that a big piece of the gas calculation for these operations is determining the gas to send along with the call.
 There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation.
 If you're not that lucky, see the `gas_sent_with_call` [section](#ac-gas-to-send-with-call-operations).
+Similar to selfdestruct, `CALL` incurs an additional cost if it forces an account to be added to the state trie by sending a nonzero amount of eth to an address that was previously empty.
+"Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
 Terms:
 - `call_value`: the value sent with the call (`val` in the stack representation above)
@@ -327,7 +329,7 @@ Gas Calculation:
     - **If** `is_empty(target_addr)` (forcing a new account to be created in the state trie):
         - `base_gas += 25000`
 
-Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -339,7 +341,7 @@ Gas Calculation:
 - **If** `call_value > 0` (sending value with call):
     - `base_gas += 9000`
 
-Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -349,7 +351,7 @@ And the final cost of the operation:
 Gas Calculation:
 - `base_gas = mem_expansion_cost`
 
-Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -359,7 +361,7 @@ And the final cost of the operation:
 Gas Calculation:
 - `base_gas = mem_expansion_cost`
 
-Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -377,9 +379,9 @@ To avoid breaking these contracts, if the `requested_gas` is more than `remainin
 
 Terms:
 - `base_gas`: the cost of the operation before taking into account the gas that should be sent along with the call.
-See the section specific to the respective call op for this calculation.
-- `available_gas`: the gas remaining in the current execution context immediately before the execution of the `CALL` op
-- `remaining_gas`: the gas remaining after deducting the base cost of the `CALL` op but before determining the `gas_sent_with_call`
+See [AB](#ab-call-operations) for this calculation.
+- `available_gas`: the gas remaining in the current execution context immediately before the execution of the op
+- `remaining_gas`: the gas remaining after deducting the `base_cost` of the op but before determining `gas_sent_with_call`
 - `requested_gas`: the gas requested to be sent with the call (`gas` in the stack representation above)
 - `all_but_one_64th`: All but 1//64 of the remaining gas
 - `gas_sent_with_call`: the gas ultimately sent with the call
@@ -389,7 +391,7 @@ Gas Calculation:
 - `all_but_one_64th = remaining_gas - (remaining_gas // 64)`
 - `gas_sent_with_call = min(requested_gas, all_but_one_64th)`
 
-Also note that whatever portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns.
+Also note that any portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns.
 
 
 ## AF: INVALID
