@@ -1,6 +1,8 @@
 # EVM Opcodes
 An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/).
 Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm.html), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
+This is intended to be an accessible reference, but it is not particularly rigorous.
+If you want to be certain of correctness and aware of every edge case, I would suggest using the Jello Paper or a client implementation.
 
 | Hex | Name        | Gas | Stack In            | Stack Out             | Mem / Storage Out     | Notes |
 | :---: | :---      | :---: | :---              | :---                  | :---                  | :--- |
@@ -144,21 +146,20 @@ A3  | LOG3          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2 
 A4  | LOG4          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2, topic3 |    || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF| *invalid*
 F0  | CREATE        |32000[\*](#a2-memory-expansion-cost)| val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
-F1  | CALL          |[A8](#a8-call)| gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
-F2  | CALLCODE      |   | gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
+F1  | CALL          |[AB](#ab-call-operations)| gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
+F2  | CALLCODE      |[AB](#ab-call-operations)| gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propogate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3  | RETURN        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
-F4  | DELEGATECALL  |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
-F5  | CREATE2       |[AB](#ab-create2)| val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
+F4  | DELEGATECALL  |[AB](#ab-call-operations)| gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
+F5  | CREATE2       |[A9](#a9-create2)| val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9| *invalid*
-FA  | STATICCALL    |   | gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
+FA  | STATICCALL    |[AB](#ab-call-operations)| gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
 FD  | REVERT        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
-FF  | SELFDESTRUCT  |[AC](#ac-selfdestruct)| addr                                              |               || destroy contract and sends all funds to `addr`
-
-
-
-
+FF  | SELFDESTRUCT  |[AA](#aa-selfdestruct)| addr                                              |               || destroy contract and sends all funds to `addr`
+  
+  
+  
 # Appendix - Opcode Notes and Dynamic Gas Costs
 
 ## A1: Intrinsic Gas
@@ -207,7 +208,7 @@ Terms:
 Gas Calculation:
 - `gas_cost = 30 + 6 * data_size_words + mem_expansion_cost`
 
-## A5: COPY Operations
+## A5: \*COPY Operations
 The following applies for the operations `CALLDATACOPY`, `CODECOPY`, `EXTCODECOPY`, and `RETURNDATACOPY`.
 Note that `EXTCODECOPY` has a different `static_cost` than the other ops and also takes its `len` parameter from a different index on the stack.
 
@@ -237,6 +238,8 @@ Terms:
 - `new_val`: the value of the storage slot immediately *after* the `sstore` op in question
 
 Gas Calculation:
+- **If** `gas_left <= 2300`:
+    - `throw OUT_OF_GAS` (can not `sstore` with < 2300 gas for backwards compatibility)
 - `gas_cost = 0`
 - `gas_refund = 0`
 - **If** `new_val == current_val` (no-op):
@@ -263,19 +266,20 @@ Gas Calculation:
                 - `gas_refund += 4200`
 
 ## A7: LOG\* Operations
+Note that for `LOG*` ops gas is paid per byte of data (not per word).
+
 Terms:
 - `num_topics`: the \* of the LOG\* op. e.g. LOG0 has `num_topics = 0`, LOG4 has `num_topics = 4`
-- `data_size`: size of the data to log in bytes (`len` in the stack representation above). Note that for `LOG*` ops gas is paid per byte of data (not per word).
+- `data_size`: size of the data to log in bytes (`len` in the stack representation above).
 - `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
 
 Gas Calculation:
-`gas_cost = 375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
+- `gas_cost = 375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
 
-## A8: CALL
-TODO
 
-## AB: CREATE2
+## A9: CREATE2
 Note that `CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
+Also bear in mind that there is a cost incurred for storing code in addition to the costs presented here for `CREATE` and `CREATE2`.
 
 Terms:
 - `data_size`: size of the init code in bytes (`len` in the stack representation above)
@@ -283,19 +287,110 @@ Terms:
 - `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
 
 Gas Calculation:
-`gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost`
+- `gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost`
 
-## AC: SELFDESTRUCT
-Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new address being added to the state trie. If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred. "Empty", in this case is defined according to [EIP161](https://eips.ethereum.org/EIPS/eip-161) (balance == nonce == code == 0x).
+
+## AA: SELFDESTRUCT
+Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new address being added to the state trie.
+If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred.
+"Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
+
 Terms:
-`target_addr`: The recipient of the self-destructing contracts funds (`addr` in the stack representation above)
-`context_addr`: The address of the current execution context (e.g. what would be placed on the stack by an `ADDRESS` op)
+- `target_addr`: the recipient of the self-destructing contract's funds (`addr` in the stack representation above)
+- `context_addr`: the address of the current execution context (e.g. what would be placed on the stack by an `ADDRESS` op)
 
 Gas Calculation:
 - `gas_cost = 5000`: base cost
 - `gas_refund = 24000`: base refund
 - **If** `balance(context_addr) > 0 && is_empty(target_addr)` (sending funds to a previously empty address):
     - `gas_cost += 25000`
+
+
+## AB: CALL Operations
+Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` ops.
+Note that a big piece of the gas calculation for these operations is determining the gas to send along with the call.
+There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation.
+If you're not that lucky, see the `gas_sent_with_call` [section](#ac-gas-to-send-with-call-operations).
+
+Terms:
+- `call_value`: the value sent with the call (`val` in the stack representation above)
+- `target_addr`: the recipient of the call (`addr` in the stack representation above)
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
+- `gas_sent_with_call`: the gas ultimately sent with the call
+
+### AB-1: CALL
+
+Gas Calculation:
+- `base_gas = mem_expansion_cost`
+- **If** `call_value > 0` (sending value with call):
+    - `base_gas += 9000`
+    - **If** `is_empty(target_addr)` (forcing a new account to be created in the state trie):
+        - `base_gas += 25000`
+
+Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+
+And the final cost of the operation:
+- `gas_cost = base_gas + gas_sent_with_call`
+
+### AB-2: CALLCODE
+
+Gas Calculation:
+- `base_gas = mem_expansion_cost`
+- **If** `call_value > 0` (sending value with call):
+    - `base_gas += 9000`
+
+Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+
+And the final cost of the operation:
+- `gas_cost = base_gas + gas_sent_with_call`
+
+### AB-3: DELEGATECALL
+
+Gas Calculation:
+- `base_gas = mem_expansion_cost`
+
+Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+
+And the final cost of the operation:
+- `gas_cost = base_gas + gas_sent_with_call`
+
+### AB-4: STATICCALL
+
+Gas Calculation:
+- `base_gas = mem_expansion_cost`
+
+Calculate the `gas_sent_with_call` [here](#ac-gas-to-send-with-call-operation).
+
+And the final cost of the operation:
+- `gas_cost = base_gas + gas_sent_with_call`
+
+
+## AC: Gas to Send with CALL Operations
+In addition to the base cost of executing the operation, `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` also need to determine how much gas to send along with the call.
+Calculating this is fairly involved.
+Much of the complexity comes from a backward-compatible change made in [EIP-150](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md).
+Here's an attempt to explain what's going on:
+
+Basically, EIP-150 increased the `base_cost` of the `CALL` op, but most contracts in use at the time where sending `available_gas - original_base_gas` with every call.
+So, when `base_gas` increased, these contracts were suddenly trying to send more gas than they had left (`requested_gas > remaining_gas`).
+To avoid breaking these contracts, if the `requested_gas` is more than `remaining_gas`, we send `all_but_one_64th` of `remaining_gas` instead of reverting with `OUT_OF_GAS_ERROR`.
+
+Terms:
+- `base_gas`: the cost of the operation before taking into account the gas that should be sent along with the call.
+See the section specific to the respective call op for this calculation.
+- `available_gas`: the gas remaining in the current execution context immediately before the execution of the `CALL` op
+- `remaining_gas`: the gas remaining after deducting the base cost of the `CALL` op but before determining the `gas_sent_with_call`
+- `requested_gas`: the gas requested to be sent with the call (`gas` in the stack representation above)
+- `all_but_one_64th`: All but 1//64 of the remaining gas
+- `gas_sent_with_call`: the gas ultimately sent with the call
+
+Gas Calculation:
+- `remaining_gas = available_gas - base_gas`
+- `all_but_one_64th = remaining_gas - (remaining_gas // 64)`
+- `gas_sent_with_call = min(requested_gas, all_but_one_64th)`
+
+Also note that whatever portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns.
+
 
 ## AF: INVALID
 On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
