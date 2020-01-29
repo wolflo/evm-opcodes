@@ -63,9 +63,9 @@ If you want to be certain of correctness and aware of every edge case, I would s
 47  | SELFBALANCE   | 5 |                       | address(this).balance || balance of executing contract, in wei
 48-4F| *invalid*
 50  | POP           | 2 | \_anon                |                       || remove item from top of stack and discard it
-51  | MLOAD         |3[\*](#a2-memory-expansion-cost)| ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
-52  | MSTORE        |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
-53  | MSTORE8       |3[\*](#a2-memory-expansion-cost)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
+51  | MLOAD         |3[\*](#a2-memory-expansion)| ost                   | mem[ost:ost+32]       || read word from memory at offset `ost`
+52  | MSTORE        |3[\*](#a2-memory-expansion)| ost, val              |                       | mem[ost:ost+32] = val | write a word to memory
+53  | MSTORE8       |3[\*](#a2-memory-expansion)| ost, val              |                       | mem[ost] = val && 0xFF | write a single byte to memory
 54  | SLOAD         |800| key                   | storage[key]          || read word from storage
 55  | SSTORE        |[A6](#a6-sstore)   | key, val              |                       | storage[key] = val | write word to storage
 56  | JUMP          | 8 | dst                   |                       || `$pc = dst`
@@ -145,16 +145,16 @@ A2  | LOG2          |[A7](#a7-log-operations)| ost, len, topic0, topic1 |       
 A3  | LOG3          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2 |            || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
 A4  | LOG4          |[A7](#a7-log-operations)| ost, len, topic0, topic1, topic2, topic3 |    || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF| *invalid*
-F0  | CREATE        |32000[\*](#a2-memory-expansion-cost)| val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
+F0  | CREATE        |32000[\*](#a2-memory-expansion)| val, ost, len                                     | addr          || addr = keccak256(rlp([address(this), this.nonce]))
 F1  | CALL          |[AB](#ab-call-operations)| gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen | success        | mem[retOst:retOst+retLen] = returndata |
 F2  | CALLCODE      |[AB](#ab-call-operations)| gas, addr, val, argOst, argLen, retOst, retLen    | success       | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
-F3  | RETURN        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || return mem[ost:ost+len]
+F3  | RETURN        |0[\*](#a2-memory-expansion)| ost, len                                          |               || return mem[ost:ost+len]
 F4  | DELEGATECALL  |[AB](#ab-call-operations)| gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 F5  | CREATE2       |[A9](#a9-create2)| val, ost, len, salt                               | addr          || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9| *invalid*
 FA  | STATICCALL    |[AB](#ab-call-operations)| gas, addr, argOst, argLen, retOst, retLen         | success       | mem[retOst:retOst+retLen] = returndata |
 FB-FC| *invalid*
-FD  | REVERT        |0[\*](#a2-memory-expansion-cost)| ost, len                                          |               || revert(mem[ost:ost+len])
+FD  | REVERT        |0[\*](#a2-memory-expansion)| ost, len                                          |               || revert(mem[ost:ost+len])
 FE  | INVALID       |[AF](#af-invalid)  |                                                   |               || designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF  | SELFDESTRUCT  |[AA](#aa-selfdestruct)| addr                                              |               || destroy contract and sends all funds to `addr`
   
@@ -176,7 +176,7 @@ Gas Calculation:
 ## A2: Memory Expansion
 An additional gas cost is paid by any operation that expands the memory that is in use.
 This memory expansion cost is dependent on the existing memory size and is `0` if the op does not reference a memory address higher than the existing highest referenced memory address.
-A reference is any read, write, or other usage of memory (such as in `CALL`).
+A reference is any read, write, or other usage of memory (such as in a `CALL`).
 
 Terms:
 - `new_mem_size`: the highest referenced memory address after the operation in question (in bytes)
@@ -329,7 +329,7 @@ Gas Calculation:
     - **If** `is_empty(target_addr)` (forcing a new account to be created in the state trie):
         - `base_gas += 25000`
 
-Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -341,7 +341,7 @@ Gas Calculation:
 - **If** `call_value > 0` (sending value with call):
     - `base_gas += 9000`
 
-Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -351,7 +351,7 @@ And the final cost of the operation:
 Gas Calculation:
 - `base_gas = mem_expansion_cost`
 
-Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -361,7 +361,7 @@ And the final cost of the operation:
 Gas Calculation:
 - `base_gas = mem_expansion_cost`
 
-Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operation).
+Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
@@ -373,17 +373,17 @@ Calculating this is fairly involved.
 Much of the complexity comes from a backward-compatible change made in [EIP-150](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md).
 Here's an attempt to explain what's going on:
 
-Basically, EIP-150 increased the `base_cost` of the `CALL` op, but most contracts in use at the time where sending `available_gas - original_base_gas` with every call.
+Basically, EIP-150 increased the `base_cost` of the `CALL` op, but most contracts in use at the time were sending `available_gas - original_base_gas` with every call.
 So, when `base_gas` increased, these contracts were suddenly trying to send more gas than they had left (`requested_gas > remaining_gas`).
-To avoid breaking these contracts, if the `requested_gas` is more than `remaining_gas`, we send `all_but_one_64th` of `remaining_gas` instead of reverting with `OUT_OF_GAS_ERROR`.
+To avoid breaking these contracts, if the `requested_gas` is more than `remaining_gas`, we send `all_but_one_64th` of `remaining_gas` instead of trying to send `requested_gas`, which would result in an `OUT_OF_GAS_ERROR`.
 
 Terms:
 - `base_gas`: the cost of the operation before taking into account the gas that should be sent along with the call.
 See [AB](#ab-call-operations) for this calculation.
 - `available_gas`: the gas remaining in the current execution context immediately before the execution of the op
-- `remaining_gas`: the gas remaining after deducting the `base_cost` of the op but before determining `gas_sent_with_call`
+- `remaining_gas`: the gas remaining after deducting `base_cost` of the op but before deducting `gas_sent_with_call`
 - `requested_gas`: the gas requested to be sent with the call (`gas` in the stack representation above)
-- `all_but_one_64th`: All but 1//64 of the remaining gas
+- `all_but_one_64th`: All but floor(1/64) of the remaining gas
 - `gas_sent_with_call`: the gas ultimately sent with the call
 
 Gas Calculation:
