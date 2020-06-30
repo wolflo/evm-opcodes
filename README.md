@@ -323,7 +323,7 @@ Terms:
 ### AB-1: CALL
 
 Gas Calculation:
-- `base_gas = mem_expansion_cost`
+- `base_gas = 700 + mem_expansion_cost`
 - **If** `call_value > 0` (sending value with call):
     - `base_gas += 9000`
     - **If** `is_empty(target_addr)` (forcing a new account to be created in the state trie):
@@ -337,7 +337,7 @@ And the final cost of the operation:
 ### AB-2: CALLCODE
 
 Gas Calculation:
-- `base_gas = mem_expansion_cost`
+- `base_gas = 700 + mem_expansion_cost`
 - **If** `call_value > 0` (sending value with call):
     - `base_gas += 9000`
 
@@ -349,7 +349,7 @@ And the final cost of the operation:
 ### AB-3: DELEGATECALL
 
 Gas Calculation:
-- `base_gas = mem_expansion_cost`
+- `base_gas = 700 + mem_expansion_cost`
 
 Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
@@ -359,7 +359,7 @@ And the final cost of the operation:
 ### AB-4: STATICCALL
 
 Gas Calculation:
-- `base_gas = mem_expansion_cost`
+- `base_gas = 700 + mem_expansion_cost`
 
 Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations).
 
