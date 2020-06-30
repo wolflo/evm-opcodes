@@ -278,8 +278,8 @@ Gas Calculation:
 
 
 ## A9: CREATE2
-Note that `CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
-Also bear in mind that there is a cost incurred for storing code in addition to the costs presented here for `CREATE` and `CREATE2`.
+`CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
+Also note that there is a cost incurred for storing code in addition to the costs presented here for `CREATE` and `CREATE2`.
 
 Terms:
 - `data_size`: size of the init code in bytes (`len` in the stack representation above)
@@ -291,7 +291,7 @@ Gas Calculation:
 
 
 ## AA: SELFDESTRUCT
-Note that the gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new account being added to the state trie.
+The gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new account being added to the state trie.
 If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
@@ -306,11 +306,12 @@ Gas Calculation:
     - `gas_cost += 25000`
 
 
-## AB: CALL Operations
+## AB: CALL\* Operations
 Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` ops.
-Note that a big piece of the gas calculation for these operations is determining the gas to send along with the call.
-There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation.
-If you're not that lucky, see the `gas_sent_with_call` [section](#ac-gas-to-send-with-call-operations).
+A big piece of the gas calculation for these operations is determining the gas to send along with the call.
+There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation, because the `gas_sent_with_call` is consumed in the context of the called contract, and the unconsumed gas is returned.
+If not, see the `gas_sent_with_call` [section](#ac-gas-to-send-with-call-operations).
+
 Similar to selfdestruct, `CALL` incurs an additional cost if it forces an account to be added to the state trie by sending a nonzero amount of eth to an address that was previously empty.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
@@ -368,12 +369,11 @@ And the final cost of the operation:
 
 
 ## AC: Gas to Send with CALL Operations
-In addition to the base cost of executing the operation, `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` also need to determine how much gas to send along with the call.
-Calculating this is fairly involved.
-Much of the complexity comes from a backward-compatible change made in [EIP-150](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md).
-Here's an attempt to explain what's going on:
+In addition to the base cost of executing the operation, `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` need to determine how much gas to send along with the call.
+Much of the complexity here comes from a backward-compatible change made in [EIP-150](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md).
+Here's an overview of why this calculation is used:
 
-Basically, EIP-150 increased the `base_cost` of the `CALL` op, but most contracts in use at the time were sending `available_gas - original_base_gas` with every call.
+EIP-150 increased the `base_cost` of the `CALL` op from 40 to 700 gas, but most contracts in use at the time were sending `available_gas - 40` with every call.
 So, when `base_gas` increased, these contracts were suddenly trying to send more gas than they had left (`requested_gas > remaining_gas`).
 To avoid breaking these contracts, if the `requested_gas` is more than `remaining_gas`, we send `all_but_one_64th` of `remaining_gas` instead of trying to send `requested_gas`, which would result in an `OUT_OF_GAS_ERROR`.
 
@@ -391,7 +391,7 @@ Gas Calculation:
 - `all_but_one_64th = remaining_gas - (remaining_gas // 64)`
 - `gas_sent_with_call = min(requested_gas, all_but_one_64th)`
 
-Also note that any portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns.
+Any portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns. Also, if `call_value > 0`, a 2300 gas stipend is added to the amount of gas included in the call, but not to the cost of making the call.
 
 
 ## AF: INVALID
