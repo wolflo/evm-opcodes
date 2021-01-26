@@ -1,6 +1,6 @@
 # EVM Opcodes
-An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/).
-Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm.html), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
+An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/) (this appears to no longer be available).
+Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm/), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
 This is intended to be an accessible reference, but it is not particularly rigorous.
 If you want to be certain of correctness and aware of every edge case, I would suggest using the Jello Paper or a client implementation.
 
