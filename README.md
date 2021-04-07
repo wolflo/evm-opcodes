@@ -76,7 +76,10 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 59      | MSIZE         | 2     | `.` => `len(mem)`                 || size of memory in current execution context, in bytes
 5A      | GAS           | 2     | `.` => `gasRemaining`             ||
 5B      | JUMPDEST      | 1     | || mark valid jump destination
-5C-5F   | *invalid*
+5C      | BEGINSUB      | 2[\*\*](gas.md#ae-beginsub) |||| mark valid jumpsub destination. Throws OOG exception if executed.
+5D      | RETURNSUB     | 5     |        | `retDst`&#160;=>&#160;`.` || `$pc = retDst`
+5e      | JUMPSUB       | 10    | `dst` => `.` | `.`&#160;=>&#160;<code>$pc&#160;+&#160;1</code> || `$pc = dst + 1`
+5F      | *invalid*
 60      | PUSH1         | 3     | `.` => `uint8`                    || push 1-byte value onto stack
 61      | PUSH2         | 3     | `.` => `uint16`                   || push 2-byte value onto stack
 62      | PUSH3         | 3     | `.` => `uint24`                   || push 3-byte value onto stack

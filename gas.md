@@ -232,5 +232,9 @@ Gas Calculation:
 Any portion of `gas_sent_with_call` that is not used by the recipient of the call is refunded to the caller after the call returns. Also, if `call_value > 0`, a 2300 gas stipend is added to the amount of gas included in the call, but not to the cost of making the call.
 
 
+## AE: BEGINSUB
+While the gas cost is specified in [EIP-2315](https://eips.ethereum.org/EIPS/eip-2315), any attempted execution of a `BEGINSUB` causes an Out Of Gas execption.
+
+
 ## AF: INVALID
 On execution of any invalid operation, whether the designated `INVALID` op or simply an undefined op, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
