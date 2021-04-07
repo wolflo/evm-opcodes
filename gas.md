@@ -115,7 +115,7 @@ Gas Calculation:
 - `gas_cost = 375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
 
 
-## A9: CREATE2
+## A8: CREATE2
 `CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
 Also note that there is a cost incurred for storing code in addition to the costs presented here for `CREATE` and `CREATE2`.
 
@@ -128,7 +128,7 @@ Gas Calculation:
 - `gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost`
 
 
-## AA: SELFDESTRUCT
+## A9: SELFDESTRUCT
 The gas cost of a `SELFDESTRUCT` op is dependent on whether or not the op results in a new account being added to the state trie.
 If a nonzero amount of eth is sent to an address that was previously empty, an additional cost is incurred.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
@@ -144,7 +144,7 @@ Gas Calculation:
     - `gas_cost += 25000`
 
 
-## AB: CALL\* Operations
+## AA: CALL\* Operations
 Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` ops.
 A big piece of the gas calculation for these operations is determining the gas to send along with the call.
 There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation, because the `gas_sent_with_call` is consumed in the context of the called contract, and the unconsumed gas is returned.
@@ -159,7 +159,7 @@ Terms:
 - `mem_expansion_cost`: the cost of any memory expansion required (see [A2](#a2-memory-expansion))
 - `gas_sent_with_call`: the gas ultimately sent with the call
 
-### AB-1: CALL
+### AA-1: CALL
 
 Gas Calculation:
 - `base_gas = 700 + mem_expansion_cost`
@@ -173,7 +173,7 @@ Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations)
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
 
-### AB-2: CALLCODE
+### AA-2: CALLCODE
 
 Gas Calculation:
 - `base_gas = 700 + mem_expansion_cost`
@@ -185,7 +185,7 @@ Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations)
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
 
-### AB-3: DELEGATECALL
+### AA-3: DELEGATECALL
 
 Gas Calculation:
 - `base_gas = 700 + mem_expansion_cost`
@@ -195,7 +195,7 @@ Calculate the `gas_sent_with_call` [below](#ac-gas-to-send-with-call-operations)
 And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
 
-### AB-4: STATICCALL
+### AA-4: STATICCALL
 
 Gas Calculation:
 - `base_gas = 700 + mem_expansion_cost`
@@ -206,7 +206,7 @@ And the final cost of the operation:
 - `gas_cost = base_gas + gas_sent_with_call`
 
 
-## AC: Gas to Send with CALL Operations
+## AB: Gas to Send with CALL Operations
 In addition to the base cost of executing the operation, `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` need to determine how much gas to send along with the call.
 Much of the complexity here comes from a backward-compatible change made in [EIP-150](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md).
 Here's an overview of why this calculation is used:
