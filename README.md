@@ -147,12 +147,12 @@ A2      | LOG2          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topi
 A3      | LOG3          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
 A4      | LOG4          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF   | *invalid*
-F0      | CREATE        |32000[\*](gas.md#a0-1-memory-expansion)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
+F0      | CREATE        |[A7](gas.md#a7-create-operations)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
 F1      | CALL          |[A8](gas.md#a8-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
 F2      | CALLCODE      |[A8](gas.md#a8-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3      | RETURN        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || return mem[ost:ost+len]
 F4      | DELEGATECALL  |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen`<br>=> `success` | mem[retOst:retOst+retLen] := returndata |
-F5      | CREATE2       |[A7](gas.md#a7-create2)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
+F5      | CREATE2       |[A7](gas.md#a7-create-operations)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9   | *invalid*
 FA      | STATICCALL    |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen] := returndata |
 FB-FC   | *invalid*

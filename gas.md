@@ -26,7 +26,7 @@ Gas Calculation:
 - <code>gas\_cost = (new\_mem\_size\_words ^ 2 / 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
 
 Useful Notes:
-- The following opcodes incur a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`, `CREATE`.
+- The following opcodes incur a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`.
 - Referencing a zero length range does not require memory to be extended to the beginning of the range.
 - The memory cost function is linear up to 724 bytes of memory used, at which point additional memory costs substantially more.
 
@@ -128,17 +128,36 @@ Gas Calculation:
 - `gas_cost = 375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
 
 
-## A7: CREATE2
+## A7: CREATE\* Operations
+
+Common Terms:
+- `mem_expansion_cost`: the cost of any memory expansion required (see [A0-1](#a0-1-memory-expansion))
+- `code_deposit_cost`: the per-byte cost incurred for storing the deployed code (see [A7-F](#a7-f-code-deposit-cost)).
+
+### A7-0: CREATE
+
+Gas Calculation:
+- `gas_cost = 32000 + mem_expansion_cost + code_deposit_cost`
+
+### A7-1: CREATE2
 `CREATE2` incurs an additional dynamic cost over `CREATE` because of the need to hash the init code.
-Also note that there is a cost incurred for storing code in addition to the costs presented here for `CREATE` and `CREATE2`.
 
 Terms:
 - `data_size`: size of the init code in bytes (`len` in the stack representation)
 - `data_size_words = (data_size + 31) // 32`: number of (32-byte) words in the init code
-- `mem_expansion_cost`: the cost of any memory expansion required (see [A0-1](#a0-1-memory-expansion))
 
 Gas Calculation:
-- `gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost`
+- `gas_cost = 32000 + 6 * data_size_words + mem_expansion_cost + code_deposit_cost`
+
+### A7-F: Code Deposit Cost
+In addition to the static and dynamic cost of the `CREATE` and `CREATE2` operations, a per-byte cost is charged for storing the returned runtime code.
+Unlike the static and dynamic costs of the opcodes, this cost is not applied until *after* the execution of the initialization code halts.
+
+Terms:
+- `returned_code_size`: the length of the returned runtime code
+
+Gas Calculation:
+- `code_deposit_cost = 200 * returned_code_size`
 
 
 ## A8: CALL\* Operations
@@ -150,7 +169,7 @@ If not, see the `gas_sent_with_call` [section](#a8-f-gas-to-send-with-call-opera
 Similar to selfdestruct, `CALL` incurs an additional cost if it forces an account to be added to the state trie by sending a nonzero amount of eth to an address that was previously empty.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
-Terms:
+Common Terms:
 - `call_value`: the value sent with the call (`val` in the stack representation)
 - `target_addr`: the recipient of the call (`addr` in the stack representation)
 - `mem_expansion_cost`: the cost of any memory expansion required (see [A0-1](#a0-1-memory-expansion))
