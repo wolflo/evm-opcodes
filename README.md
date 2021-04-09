@@ -40,7 +40,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 20      | SHA3          |[A2](gas.md#a2-sha3)| `ost, len` => `keccak256(mem[ost:ost+len])` || keccak256
 21-2F   | *invalid*
 30      | ADDRESS       | 2     | `.` => `address(this)`            || address of executing contract
-31      | BALANCE       | 700   | `addr` => `addr.balance`          || balance, in wei
+31      | BALANCE       |[A5](gas.md#a5-balance-extcodesize-extcodehash)| `addr` => `addr.balance`          || balance, in wei
 32      | ORIGIN        | 2     | `.` => `tx.origin`                || address that originated the tx
 33      | CALLER        | 2     | `.` => `msg.sender`               || address of msg sender
 34      | CALLVALUE     | 2     | `.` => `msg.value`                || msg value, in wei
@@ -50,11 +50,11 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 38      | CODESIZE      | 2     | `.` => `len(this.code)`           || length of executing contract's code, in bytes
 39      | CODECOPY      |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` || mem[dstOst:dstOst+len] := this.code[ost:ost+len] | copy executing contract's bytecode
 3A      | GASPRICE      | 2     | `.` => `tx.gasprice`              || gas price of tx, in wei per unit gas
-3B      | EXTCODESIZE   | 700   | `addr` => `len(addr.code)`        || size of code at addr, in bytes
+3B      | EXTCODESIZE   |[A5](gas.md#a5-balance-extcodesize-extcodehash)| `addr` => `len(addr.code)`        || size of code at addr, in bytes
 3C      | EXTCODECOPY   |[A4](gas.md#a4-extcodecopy)|`addr, dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := addr.code[ost:ost+len] | copy code from `addr`
 3D      |RETURNDATASIZE | 2     | `.` => `size`                     || size of returned data from last external call, in bytes
 3E      |RETURNDATACOPY |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := returndata[ost:ost+len] | copy returned data from last external call
-3F      | EXTCODEHASH   | 700   | `addr` => `hash`                  || hash = addr.exists ? keccak256(addr.code) : 0
+3F      | EXTCODEHASH   |[A5](gas.md#a5-balance-extcodesize-extcodehash)| `addr` => `hash`                  || hash = addr.exists ? keccak256(addr.code) : 0
 40      | BLOCKHASH     | 20    | `blockNum` => `blockHash(blockNum)` ||
 41      | COINBASE      | 2     | `.` => `block.coinbase`           || address of miner of current block
 42      | TIMESTAMP     | 2     | `.` => `block.timestamp`          || timestamp of current block
@@ -68,7 +68,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 51      | MLOAD         |3[\*](gas.md#a0-1-memory-expansion)| `ost` => `mem[ost:ost+32]` || read word from memory at offset `ost`
 52      | MSTORE        |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory
 53      | MSTORE8       |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost] := val && 0xFF | write a single byte to memory
-54      | SLOAD         | 800   | `key` => `storage[key]`           || read word from storage
+54      | SLOAD         |[A6](gas.md#a6-sload)| `key` => `storage[key]`           || read word from storage
 55      | SSTORE        |[A7](gas.md#a7-sstore)   | `key, val` => `.` | storage[key] := val | write word to storage
 56      | JUMP          | 8     | `dst` => `.`                      || `$pc := dst`
 57      | JUMPI         | 10    | `dst, condition` => `.`           || `$pc := condition ? dst : $pc + 1`
