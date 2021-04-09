@@ -19,7 +19,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 07      | SMOD          | 5     | `a, b` => `a % b`                 || int256 modulus
 08      | ADDMOD        | 8     | `a, b, N` => `(a + b) % N`        || (u)int256 addition modulo N
 09      | MULMOD        | 8     | `a, b, N` => `(a * b) % N`        || (u)int256 multiplication modulo N
-0A      | EXP           |[A3](gas.md#a3-exp)| `a, b` => `a ** b`    || uint256 exponentiation modulo 2\*\*256
+0A      | EXP           |[A1](gas.md#a1-exp)| `a, b` => `a ** b`    || uint256 exponentiation modulo 2\*\*256
 0B      | SIGNEXTEND    | 5     | `b, x` => `SIGNEXTEND(x, b)`      || sign extend `x` from `(b + 1) * 8` bits to 256 bits.
 0C-0F   | *invalid*
 10      | LT            | 3     | `a, b` => `a < b`                 || uint256 less-than
@@ -37,7 +37,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 1C      | SHR           | 3     | `shift, val` => `val >> shift`    || logical shift right
 1D      | SAR           | 3     | `shift, val` => `val >> shift`    || arithmetic shift right
 1E-1F   | *invalid*
-20      | SHA3          |[A4](gas.md#a4-sha3)| `ost, len` => `keccak256(mem[ost:ost+len])` || keccak256
+20      | SHA3          |[A2](gas.md#a2-sha3)| `ost, len` => `keccak256(mem[ost:ost+len])` || keccak256
 21-2F   | *invalid*
 30      | ADDRESS       | 2     | `.` => `address(this)`            || address of executing contract
 31      | BALANCE       | 700   | `addr` => `addr.balance`          || balance, in wei
@@ -46,14 +46,14 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 34      | CALLVALUE     | 2     | `.` => `msg.value`                || msg value, in wei
 35      | CALLDATALOAD  | 3     | `idx` => `msg.data[idx:idx+32]`   || read word from msg data at index `idx`
 36      | CALLDATASIZE  | 2     | `.` => `len(msg.data)`            || length of msg data, in bytes
-37      | CALLDATACOPY  |[A5](gas.md#a5-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := msg.data[ost:ost+len | copy msg data
+37      | CALLDATACOPY  |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := msg.data[ost:ost+len | copy msg data
 38      | CODESIZE      | 2     | `.` => `len(this.code)`           || length of executing contract's code, in bytes
-39      | CODECOPY      |[A5](gas.md#a5-copy-operations)| `dstOst, ost, len` => `.` || mem[dstOst:dstOst+len] := this.code[ost:ost+len] | copy executing contract's bytecode
+39      | CODECOPY      |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` || mem[dstOst:dstOst+len] := this.code[ost:ost+len] | copy executing contract's bytecode
 3A      | GASPRICE      | 2     | `.` => `tx.gasprice`              || gas price of tx, in wei per unit gas
 3B      | EXTCODESIZE   | 700   | `addr` => `len(addr.code)`        || size of code at addr, in bytes
-3C      | EXTCODECOPY   |[A5](gas.md#a5-copy-operations)|`addr, dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := addr.code[ost:ost+len] | copy code from `addr`
+3C      | EXTCODECOPY   |[A4](gas.md#a4-extcodecopy)|`addr, dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := addr.code[ost:ost+len] | copy code from `addr`
 3D      |RETURNDATASIZE | 2     | `.` => `size`                     || size of returned data from last external call, in bytes
-3E      |RETURNDATACOPY |[A5](gas.md#a5-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := returndata[ost:ost+len] | copy returned data from last external call
+3E      |RETURNDATACOPY |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := returndata[ost:ost+len] | copy returned data from last external call
 3F      | EXTCODEHASH   | 700   | `addr` => `hash`                  || hash = addr.exists ? keccak256(addr.code) : 0
 40      | BLOCKHASH     | 20    | `blockNum` => `blockHash(blockNum)` ||
 41      | COINBASE      | 2     | `.` => `block.coinbase`           || address of miner of current block
@@ -65,11 +65,11 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 47      | SELFBALANCE   | 5     | `.` => `address(this).balance`    || balance of executing contract, in wei
 48-4F   | *invalid*
 50      | POP           | 2     | `_anon` => `.` || remove item from top of stack and discard it
-51      | MLOAD         |3[\*](gas.md#a2-memory-expansion)| `ost` => `mem[ost:ost+32]` || read word from memory at offset `ost`
-52      | MSTORE        |3[\*](gas.md#a2-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory
-53      | MSTORE8       |3[\*](gas.md#a2-memory-expansion)| `ost, val` => `.` | mem[ost] := val && 0xFF | write a single byte to memory
+51      | MLOAD         |3[\*](gas.md#a0-1-memory-expansion)| `ost` => `mem[ost:ost+32]` || read word from memory at offset `ost`
+52      | MSTORE        |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory
+53      | MSTORE8       |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost] := val && 0xFF | write a single byte to memory
 54      | SLOAD         | 800   | `key` => `storage[key]`           || read word from storage
-55      | SSTORE        |[A6](gas.md#a6-sstore)   | `key, val` => `.` | storage[key] := val | write word to storage
+55      | SSTORE        |[A5](gas.md#a5-sstore)   | `key, val` => `.` | storage[key] := val | write word to storage
 56      | JUMP          | 8     | `dst` => `.`                      || `$pc := dst`
 57      | JUMPI         | 10    | `dst, condition` => `.`           || `$pc := condition ? dst : $pc + 1`
 58      | PC            | 2     | `.` => `$pc`                      || program counter
@@ -141,21 +141,21 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 9D      | SWAP14        | 3     | `a, ..., b` => `b, ..., a`        ||
 9E      | SWAP15        | 3     | `a, ..., b` => `b, ..., a`        ||
 9F      | SWAP16        | 3     | `a, ..., b` => `b, ..., a`        ||
-A0      | LOG0          |[A7](gas.md#a7-log-operations)| `ost, len` => `.` || LOG0(memory[ost:ost+len])
-A1      | LOG1          |[A7](gas.md#a7-log-operations)| `ost, len, topic0` => `.` || LOG1(memory[ost:ost+len], topic0)
-A2      | LOG2          |[A7](gas.md#a7-log-operations)| `ost, len, topic0, topic1` => `.` || LOG1(memory[ost:ost+len], topic0, topic1)
-A3      | LOG3          |[A7](gas.md#a7-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
-A4      | LOG4          |[A7](gas.md#a7-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
+A0      | LOG0          |[A6](gas.md#a6-log-operations)| `ost, len` => `.` || LOG0(memory[ost:ost+len])
+A1      | LOG1          |[A6](gas.md#a6-log-operations)| `ost, len, topic0` => `.` || LOG1(memory[ost:ost+len], topic0)
+A2      | LOG2          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1` => `.` || LOG1(memory[ost:ost+len], topic0, topic1)
+A3      | LOG3          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
+A4      | LOG4          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF   | *invalid*
-F0      | CREATE        |32000[\*](gas.md#a2-memory-expansion)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
-F1      | CALL          |[AA](gas.md#aa-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
-F2      | CALLCODE      |[AA](gas.md#aa-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
-F3      | RETURN        |0[\*](gas.md#a2-memory-expansion)| `ost, len` => `.` || return mem[ost:ost+len]
-F4      | DELEGATECALL  |[AA](gas.md#aa-call-operations)| `gas, addr, argOst, argLen, retOst, retLen`<br>=> `success` | mem[retOst:retOst+retLen] := returndata |
-F5      | CREATE2       |[A8](gas.md#a8-create2)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
+F0      | CREATE        |32000[\*](gas.md#a0-1-memory-expansion)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
+F1      | CALL          |[A8](gas.md#a8-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
+F2      | CALLCODE      |[A8](gas.md#a8-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
+F3      | RETURN        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || return mem[ost:ost+len]
+F4      | DELEGATECALL  |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen`<br>=> `success` | mem[retOst:retOst+retLen] := returndata |
+F5      | CREATE2       |[A7](gas.md#a7-create2)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9   | *invalid*
-FA      | STATICCALL    |[AA](gas.md#aa-call-operations)| `gas, addr, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen] := returndata |
+FA      | STATICCALL    |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen] := returndata |
 FB-FC   | *invalid*
-FD      | REVERT        |0[\*](gas.md#a2-memory-expansion)| `ost, len` => `.` || revert(mem[ost:ost+len])
+FD      | REVERT        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || revert(mem[ost:ost+len])
 FE      | INVALID       |[AF](gas.md#af-invalid)  ||| designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
 FF      | SELFDESTRUCT  |[A9](gas.md#a9-selfdestruct)| `addr` => `.` ||| destroy contract and sends all funds to `addr`
