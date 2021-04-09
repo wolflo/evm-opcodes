@@ -69,7 +69,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 52      | MSTORE        |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory
 53      | MSTORE8       |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost] := val && 0xFF | write a single byte to memory
 54      | SLOAD         | 800   | `key` => `storage[key]`           || read word from storage
-55      | SSTORE        |[A5](gas.md#a5-sstore)   | `key, val` => `.` | storage[key] := val | write word to storage
+55      | SSTORE        |[A7](gas.md#a7-sstore)   | `key, val` => `.` | storage[key] := val | write word to storage
 56      | JUMP          | 8     | `dst` => `.`                      || `$pc := dst`
 57      | JUMPI         | 10    | `dst, condition` => `.`           || `$pc := condition ? dst : $pc + 1`
 58      | PC            | 2     | `.` => `$pc`                      || program counter
@@ -141,21 +141,21 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 9D      | SWAP14        | 3     | `a, ..., b` => `b, ..., a`        ||
 9E      | SWAP15        | 3     | `a, ..., b` => `b, ..., a`        ||
 9F      | SWAP16        | 3     | `a, ..., b` => `b, ..., a`        ||
-A0      | LOG0          |[A6](gas.md#a6-log-operations)| `ost, len` => `.` || LOG0(memory[ost:ost+len])
-A1      | LOG1          |[A6](gas.md#a6-log-operations)| `ost, len, topic0` => `.` || LOG1(memory[ost:ost+len], topic0)
-A2      | LOG2          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1` => `.` || LOG1(memory[ost:ost+len], topic0, topic1)
-A3      | LOG3          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
-A4      | LOG4          |[A6](gas.md#a6-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
+A0      | LOG0          |[A8](gas.md#a8-log-operations)| `ost, len` => `.` || LOG0(memory[ost:ost+len])
+A1      | LOG1          |[A8](gas.md#a8-log-operations)| `ost, len, topic0` => `.` || LOG1(memory[ost:ost+len], topic0)
+A2      | LOG2          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topic1` => `.` || LOG1(memory[ost:ost+len], topic0, topic1)
+A3      | LOG3          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
+A4      | LOG4          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF   | *invalid*
-F0      | CREATE        |[A7](gas.md#a7-create-operations)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
-F1      | CALL          |[A8](gas.md#a8-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
-F2      | CALLCODE      |[A8](gas.md#a8-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
+F0      | CREATE        |[A9](gas.md#a9-create-operations)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
+F1      | CALL          |[AA](gas.md#aa-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
+F2      | CALLCODE      |[AA](gas.md#aa-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3      | RETURN        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || return mem[ost:ost+len]
-F4      | DELEGATECALL  |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen`<br>=> `success` | mem[retOst:retOst+retLen] := returndata |
-F5      | CREATE2       |[A7](gas.md#a7-create-operations)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
+F4      | DELEGATECALL  |[AA](gas.md#aa-call-operations)| `gas, addr, argOst, argLen, retOst, retLen`<br>=> `success` | mem[retOst:retOst+retLen] := returndata |
+F5      | CREATE2       |[A9](gas.md#a9-create-operations)| `val, ost, len, salt` => `addr` || addr = keccak256(0xff ++ address(this) ++ salt ++ keccak256(mem[ost:ost+len]))[12:]
 F6-F9   | *invalid*
-FA      | STATICCALL    |[A8](gas.md#a8-call-operations)| `gas, addr, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen] := returndata |
+FA      | STATICCALL    |[AA](gas.md#aa-call-operations)| `gas, addr, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen] := returndata |
 FB-FC   | *invalid*
 FD      | REVERT        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || revert(mem[ost:ost+len])
 FE      | INVALID       |[AF](gas.md#af-invalid)  ||| designated invalid opcode - [EIP-141](https://eips.ethereum.org/EIPS/eip-141)
-FF      | SELFDESTRUCT  |[A9](gas.md#a9-selfdestruct)| `addr` => `.` ||| destroy contract and sends all funds to `addr`
+FF      | SELFDESTRUCT  |[AB](gas.md#ab-selfdestruct)| `addr` => `.` ||| destroy contract and sends all funds to `addr`
