@@ -36,11 +36,11 @@ These access sets keep track of which addresses and storage slots have already b
 
 - `touched_addresses : Set[Address]`
     - a set where every element is an address
-    - initialized to the empty set, `{}`
+    - initialized to include `tx.origin`, `tx.to`\*, and all precompiles
+        - \* For a contract creation transaction, `touched_addresses` is initialized to include the address of the created contract instead of `tx.to`, which is the zero address.
 - `touched_storage_slots : Set[(Address, Bytes32)]`
     - a set where every element is a tuple, `(address, storage_key)`
-    - initialized to include `tx.origin`, `tx.to`\*, and all precompiles
-        - \* For a contract creation transaction, `touched_storage_slots` is initialized to include the address of the created contract instead of `tx.to`, which is the zero address.
+    - initialized to the empty set, `{}`
 
 The access sets above are relevant for the following operations:
 - `ADDRESS_TOUCHING_OPCODES := { EXTCODESIZE, EXTCODECOPY, EXTCODEHASH, BALANCE, CALL, CALLCODE, DELEGATECALL, STATICCALL, SELFDESTRUCT }`
