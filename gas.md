@@ -61,6 +61,20 @@ Important Notes:
 - If an execution frame reverts, the access sets will return to the state they were in before the frame was entered.
 - Additions to the `touched_addresses` set for `*CALL` and `CREATE*` opcodes are made immediately *before* the new execution frames are entered, so any failure within a call or contract creation will not remove the target address of the failing `*CALL` or `CREATE*` from the `touched_addresses` set.
 
+#### Pre-populating the Access Sets
+
+[EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) introduced an optional access *list* that can be included as part of a transaction.
+This access list allows elements to be added to the `touched_addresses` and `touched_storage_slots` access *sets* before execution of a transaction begins.
+The cost for doing so is `2400` gas for each address added to `touched_addresses` and `1900` gas for each `(address, storage_key)` pair added to `touched_storage_slots`.
+This cost is charged at the same time as [intrinsic gas](#a0-0-intrinsic-gas).
+
+Important Notes:
+- No `(ADDR, storage_key)` pair can be added to `touched_storage_slots` without also adding `ADDR` to `touched_addresses`.
+- The access list may contain duplicates.
+The addition of a duplicate item to one of the access sets is a no-op, but the cost of addition is still charged.
+- Providing an access list with a transaction can yield a modest discount for each unique access, but this is not always the case.
+See [@fvictorio/gas-costs-after-berlin](https://hackmd.io/@fvictorio/gas-costs-after-berlin) for a more complete discussion.
+
 #
 
 ## A1: EXP
