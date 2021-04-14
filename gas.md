@@ -37,7 +37,7 @@ These access sets keep track of which addresses and storage slots have already b
 - `touched_addresses : Set[Address]`
     - a set where every element is an address
     - initialized to include `tx.origin`, `tx.to`\*, and all precompiles
-        - \* For a contract creation transaction, `touched_addresses` is initialized to include the address of the created contract instead of `tx.to`, which is the zero address.
+    - \* For a contract creation transaction, `touched_addresses` is initialized to include the address of the created contract instead of `tx.to`, which is the zero address.
 - `touched_storage_slots : Set[(Address, Bytes32)]`
     - a set where every element is a tuple, `(address, storage_key)`
     - initialized to the empty set, `{}`
@@ -60,6 +60,10 @@ Important Notes:
 - Adding duplicate elements to these sets is a no-op. Performant implementations will use a map with more complicated addition logic.
 - If an execution frame reverts, the access sets will return to the state they were in before the frame was entered.
 - Additions to the `touched_addresses` set for `*CALL` and `CREATE*` opcodes are made immediately *before* the new execution frames are entered, so any failure within a call or contract creation will not remove the target address of the failing `*CALL` or `CREATE*` from the `touched_addresses` set.
+Some tricky edge cases:
+    - For `*CALL`, if the call fails for exceeding the maximum call depth or attempting to send more value than the balance of the current address, the target address remains in the `touched_addresses` set.
+    - For `CREATE*`, if the contract creation fails for exceeding the maximum call depth or attempting to send more value than the balance of the current address, the address of the created contract does **NOT** remain in the `touched_addresses` set.
+    - If a `CREATE*` operation fails for attempting to deploy a contract to a non-empty account, the address of the created contract remains in the `touched_addresses` set.
 
 #### Pre-populating the Access Sets
 
@@ -181,11 +185,11 @@ Gas Calculation:
         - **If** `orig_val == 0` (slot started zero, currently still zero, now being changed to nonzero):
             - `gas_cost += 20000`
         - **Else** `orig_val != 0` (slot started nonzero, currently still same nonzero value, now being changed):
-            - `gas_cost += 2900` and..
+            - `gas_cost += 2900` and update the refund as follows..
             - **If** `new_val == 0` (the value to store is 0):
                 - `gas_refund += 15000`
     - **Else** `current_val != orig_val` ("dirty slot", already updated in current execution context):
-        - `gas_cost += 100` and..
+        - `gas_cost += 100` and update the refund as follows..
         - **If** `orig_val != 0` (execution context started with a nonzero value in slot):
             - **If** `current_val == 0` (slot started nonzero, currently zero, now being changed to nonzero):
                 - `gas_refund -= 15000`
