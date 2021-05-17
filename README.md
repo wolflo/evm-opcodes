@@ -63,7 +63,8 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 45      | GASLIMIT      | 2     | `.` => `block.gaslimit`           || gas limit of current block
 46      | CHAINID       | 2     | `.` => `chain_id`                 || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
 47      | SELFBALANCE   | 5     | `.` => `address(this).balance`    || balance of executing contract, in wei
-48-4F   | *invalid*
+48      | BASEFEE       | 2     | `.` => `block.basefee`            || base fee for this block (>= London fork) 
+49-4F   | *invalid*
 50      | POP           | 2     | `_anon` => `.` || remove item from top of stack and discard it
 51      | MLOAD         |3[\*](gas.md#a0-1-memory-expansion)| `ost` => `mem[ost:ost+32]` || read word from memory at offset `ost`
 52      | MSTORE        |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory
