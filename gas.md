@@ -193,7 +193,7 @@ Gas Calculation:
         - **If** `orig_val != 0` (execution context started with a nonzero value in slot):
             - **If** `current_val == 0` (slot started nonzero, currently zero, now being changed to nonzero):
                 - `gas_refund -= 15000`
-            - **If** `new_val == 0` (slot started nonzero, currently still nonzero, now being changed to zero):
+            - **Else if** `new_val == 0` (slot started nonzero, currently still nonzero, now being changed to zero):
                 - `gas_refund += 15000`
         - **If** `new_val == orig_val` (slot is reset to the value it started with):
             - **If** `orig_val == 0` (slot started zero, currently nonzero, now being reset to zero):
