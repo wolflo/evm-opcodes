@@ -260,6 +260,8 @@ Terms:
 Gas Calculation:
 - `code_deposit_cost = 200 * returned_code_size`
 
+A note related to the code deposit step of contract creation:
+As of [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541), any code returned from a contract creation (i.e. what *would* become the deployed contract code), results in an exceptional abort of the entire contract creation if the code's first byte is `0xEF`.
 
 ## AA: CALL\* Operations
 Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` operations.
