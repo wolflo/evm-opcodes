@@ -49,7 +49,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 37      | CALLDATACOPY  |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := msg.data[ost:ost+len | copy msg data
 38      | CODESIZE      | 2     | `.` => `len(this.code)`           || length of executing contract's code, in bytes
 39      | CODECOPY      |[A3](gas.md#a3-copy-operations)| `dstOst, ost, len` => `.` || mem[dstOst:dstOst+len] := this.code[ost:ost+len] | copy executing contract's bytecode
-3A      | GASPRICE      | 2     | `.` => `tx.gasprice`              || gas price of tx, in wei per unit gas
+3A      | GASPRICE      | 2     | `.` => `tx.gasprice`              || gas price of tx, in wei per unit gas [\*\*](https://github.com/ethereum/EIPs/blob/0341984ff14c8ce398f6d2b3e009c07cd99df8eb/EIPS/eip-1559.md#gasprice)
 3B      | EXTCODESIZE   |[A5](gas.md#a5-balance-extcodesize-extcodehash)| `addr` => `len(addr.code)`        || size of code at addr, in bytes
 3C      | EXTCODECOPY   |[A4](gas.md#a4-extcodecopy)|`addr, dstOst, ost, len` => `.` | mem[dstOst:dstOst+len] := addr.code[ost:ost+len] | copy code from `addr`
 3D      |RETURNDATASIZE | 2     | `.` => `size`                     || size of returned data from last external call, in bytes
@@ -63,7 +63,8 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 45      | GASLIMIT      | 2     | `.` => `block.gaslimit`           || gas limit of current block
 46      | CHAINID       | 2     | `.` => `chain_id`                 || push current [chain id](https://eips.ethereum.org/EIPS/eip-155) onto stack
 47      | SELFBALANCE   | 5     | `.` => `address(this).balance`    || balance of executing contract, in wei
-48-4F   | *invalid*
+48      | BASEFEE       | 2     | `.` => `block.basefee`            || base fee of current block
+49-4F   | *invalid*
 50      | POP           | 2     | `_anon` => `.` || remove item from top of stack and discard it
 51      | MLOAD         |3[\*](gas.md#a0-1-memory-expansion)| `ost` => `mem[ost:ost+32]` || read word from memory at offset `ost`
 52      | MSTORE        |3[\*](gas.md#a0-1-memory-expansion)| `ost, val` => `.` | mem[ost:ost+32] := val | write a word to memory

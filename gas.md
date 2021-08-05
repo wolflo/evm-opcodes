@@ -79,6 +79,21 @@ The addition of a duplicate item to one of the access sets is a no-op, but the c
 - Providing an access list with a transaction can yield a modest discount for each unique access, but this is not always the case.
 See [@fvictorio/gas-costs-after-berlin](https://hackmd.io/@fvictorio/gas-costs-after-berlin) for a more complete discussion.
 
+### A0-3: Gas Refunds
+Originally intended to provide incentive for clearing unused state, the total `gas_refund` is tracked throughout the execution of a transaction.
+As of [EIP-3529](https://eips.ethereum.org/EIPS/eip-3529), `SSTORE` is the only operation that potentially provides a gas refund.
+
+The maximum refund for a transaction is capped at 1/5<sup>th</sup> the *gas consumed* for the entire transaction.
+```
+refund_amt := min(gas_refund, tx.gas_used // 5)
+```
+The *gas consumed* includes the [intrinsic gas](#a0-0-intrinsic-gas), the cost of [pre-populating](#pre-populating-the-access-sets) the access sets, and the cost of any code execution.
+
+When a transaction is finalized, the gas used by the transaction is decreased by `refund_amt`.
+This effectively reimburses <code>refund_amt&#160;\*&#160;tx.gasprice</code> to `tx.origin`, but it has the added effect of decreasing the impact of the transaction on the total gas consumed in the block (for purposes of determining the block gas limit).
+
+Because the gas refund is not applied until the end of a transaction, a nonzero refund will not affect whether or not a transaction results in an `OUT_OF_GAS` exception.
+
 #
 
 ## A1: EXP
@@ -187,14 +202,14 @@ Gas Calculation:
         - **Else** `orig_val != 0` (slot started nonzero, currently still same nonzero value, now being changed):
             - `gas_cost += 2900` and update the refund as follows..
             - **If** `new_val == 0` (the value to store is 0):
-                - `gas_refund += 15000`
+                - `gas_refund += 4800`
     - **Else** `current_val != orig_val` ("dirty slot", already updated in current execution context):
         - `gas_cost += 100` and update the refund as follows..
         - **If** `orig_val != 0` (execution context started with a nonzero value in slot):
             - **If** `current_val == 0` (slot started nonzero, currently zero, now being changed to nonzero):
-                - `gas_refund -= 15000`
+                - `gas_refund -= 4800`
             - **Else if** `new_val == 0` (slot started nonzero, currently still nonzero, now being changed to zero):
-                - `gas_refund += 15000`
+                - `gas_refund += 4800`
         - **If** `new_val == orig_val` (slot is reset to the value it started with):
             - **If** `orig_val == 0` (slot started zero, currently nonzero, now being reset to zero):
                 - `gas_refund += 19900`
@@ -245,6 +260,8 @@ Terms:
 Gas Calculation:
 - `code_deposit_cost = 200 * returned_code_size`
 
+A note related to the code deposit step of contract creation:
+As of [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541), any code returned from a contract creation (i.e. what *would* become the deployed contract code), results in an exceptional abort of the entire contract creation if the code's first byte is `0xEF`.
 
 ## AA: CALL\* Operations
 Gas costs for `CALL`, `CALLCODE`, `DELEGATECALL`, and `STATICCALL` operations.
@@ -350,7 +367,6 @@ Terms:
 
 Gas Calculation:
 - `gas_cost = 5000`: base cost
-- `gas_refund = 24000`: base refund, only given for first self-destruct of the same contract within a transaction
 - **If** `balance(context_addr) > 0 && is_empty(target_addr)` (sending funds to a previously empty address):
     - `gas_cost += 25000`
 - **If** `target_addr` **not in** `touched_addresses` (cold access):
