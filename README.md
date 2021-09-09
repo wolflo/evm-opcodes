@@ -20,7 +20,7 @@ For operations with dynamic gas costs, see [gas.md](gas.md).
 08      | ADDMOD        | 8     | `a, b, N` => `(a + b) % N`        || (u)int256 addition modulo N
 09      | MULMOD        | 8     | `a, b, N` => `(a * b) % N`        || (u)int256 multiplication modulo N
 0A      | EXP           |[A1](gas.md#a1-exp)| `a, b` => `a ** b`    || uint256 exponentiation modulo 2\*\*256
-0B      | SIGNEXTEND    | 5     | `b, x` => `SIGNEXTEND(x, b)`      || sign extend `x` from `(b + 1) * 8` bits to 256 bits. In other words, interpret x as being a (b+1)-byte signed integer, then extend the sign bit so that the sign is preserved when interpreted as a 32-byte signed integer.
+0B      | SIGNEXTEND    | 5     | `b, x` => `SIGNEXTEND(x, b)`      || [sign extend](https://en.wikipedia.org/wiki/Sign_extension) `x` from `(b+1)` bytes to 32 bytes
 0C-0F   | *invalid*
 10      | LT            | 3     | `a, b` => `a < b`                 || uint256 less-than
 11      | GT            | 3     | `a, b` => `a > b`                 || uint256 greater-than
