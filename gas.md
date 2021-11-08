@@ -83,11 +83,11 @@ See [@fvictorio/gas-costs-after-berlin](https://hackmd.io/@fvictorio/gas-costs-a
 Originally intended to provide incentive for clearing unused state, the total `gas_refund` is tracked throughout the execution of a transaction.
 As of [EIP-3529](https://eips.ethereum.org/EIPS/eip-3529), `SSTORE` is the only operation that potentially provides a gas refund.
 
-The maximum refund for a transaction is capped at 1/5<sup>th</sup> the *gas consumed* for the entire transaction.
+The maximum refund for a transaction is capped at 1/5<sup>th</sup> the gas consumed for the entire transaction.
 ```
-refund_amt := min(gas_refund, tx.gas_used // 5)
+refund_amt := min(gas_refund, tx.gas_consumed // 5)
 ```
-The *gas consumed* includes the [intrinsic gas](#a0-0-intrinsic-gas), the cost of [pre-populating](#pre-populating-the-access-sets) the access sets, and the cost of any code execution.
+The gas consumed includes the [intrinsic gas](#a0-0-intrinsic-gas), the cost of [pre-populating](#pre-populating-the-access-sets) the access sets, and the cost of any code execution.
 
 When a transaction is finalized, the gas used by the transaction is decreased by `refund_amt`.
 This effectively reimburses <code>refund_amt&#160;\*&#160;tx.gasprice</code> to `tx.origin`, but it has the added effect of decreasing the impact of the transaction on the total gas consumed in the block (for purposes of determining the block gas limit).

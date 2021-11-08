@@ -1,10 +1,15 @@
 # EVM Opcodes
-An updated version of the EVM reference page at [ethervm.io](https://ethervm.io/) (this appears to no longer be available).
-Also drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm/), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
-This is intended to be an accessible reference, but it is not particularly rigorous.
+Opcode costs are drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm/), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
+This is intended to be an accessible reference, but it is informal and does not address opcode semantics.
 If you want to be certain of correctness and aware of every edge case, I would suggest using the Jello Paper or a client implementation.
 
 For operations with dynamic gas costs, see [gas.md](gas.md).
+
+### Notation
+* `a, b` => `a + b` indicates that the `ADD` opcode takes two items off the stack (`a` and `b`) and places the sum of these two elements on the stack. The leftmost item (`a`) is the top of the stack. All stack descriptions elide subsequent items on the stack, but opcodes have no effect on the stack outside of the stack items on which they operate, with the exception of overflowing the stack. The maximum stack size is 1024 items, and all stack items are 32 bytes.
+* `a // b` indicates flooring division. The result of division by 0 in the EVM is 0.
+* All arithmetic operations are modulo 2\*\*256.
+* Including the designated `INVALID` opcode, the EVM currently implements 141 opcodes, 65 of which are duplicates indicating the number of operands (`PUSHn`, `DUPn`, `SWAPn`, `LOGn`).
 
 | Hex   | Name          | Gas   | Stack      | Mem / Storage | Notes |
 | :---: | :---          | :---: | :---       | :---          | :---  |
@@ -148,7 +153,7 @@ A2      | LOG2          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topi
 A3      | LOG3          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topic1, topic2` => `.` || LOG1(memory[ost:ost+len], topic0, topic1, topic2)
 A4      | LOG4          |[A8](gas.md#a8-log-operations)| `ost, len, topic0, topic1, topic2, topic3` => `.` || LOG1(memory[ost:ost+len],&#160;topic0,&#160;topic1,&#160;topic2,&#160;topic3)
 A5-EF   | *invalid*
-F0      | CREATE        |[A9](gas.md#a9-create-operations)| `val, ost, len` => `addr` || addr = keccak256(rlp([address(this), this.nonce]))
+F0      | CREATE        |[A9](gas.md#a9-create-operations)| `val, ost, len` => `addr` || addr = keccak256(rlp\_encode([address(this), this.nonce]))
 F1      | CALL          |[AA](gas.md#aa-call-operations)| <code>gas,&#160;addr,&#160;val,&#160;argOst,&#160;argLen,&#160;retOst,&#160;retLen</code> => `success` | mem[retOst:retOst+retLen] := returndata |
 F2      | CALLCODE      |[AA](gas.md#aa-call-operations)| `gas, addr, val, argOst, argLen, retOst, retLen` => `success` | mem[retOst:retOst+retLen]&#160;=&#160;returndata | same&#160;as&#160;DELEGATECALL,&#160;but&#160;does&#160;not&#160;propagate&#160;original&#160;msg.sender&#160;and&#160;msg.value
 F3      | RETURN        |0[\*](gas.md#a0-1-memory-expansion)| `ost, len` => `.` || return mem[ost:ost+len]
