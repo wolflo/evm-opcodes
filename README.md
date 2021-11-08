@@ -6,11 +6,14 @@ If you want to be certain of correctness and aware of every edge case, I would s
 For operations with dynamic gas costs, see [gas.md](gas.md).
 
 ### Notation
-* `a, b` => `a + b` indicates that the `ADD` opcode takes two items off the stack (`a` and `b`) and places the sum of these two elements on the stack. The leftmost item (`a`) is the top of the stack. All stack descriptions elide subsequent items on the stack, but opcodes have no effect on the stack outside of the stack items on which they operate, with the exception of overflowing the stack. The maximum stack size is 1024 items, and all stack items are 32 bytes.
+* `a, b` => `a + b` indicates that the `ADD` opcode takes two items off the stack (`a` and `b`) and places the sum of these two values on the stack. The leftmost item (`a`) is the top of the stack.
+* All stack descriptions elide subsequent items that may be on the stack. It can be assumed that unspecified stack elements do not influence the semantics of an operation, except when a stack overflow would result.
+* The maximum stack size is 1024 items, and all stack items are 32 bytes.
 * `a // b` indicates flooring division. The result of division by 0 in the EVM is 0.
 * All arithmetic operations are modulo 2\*\*256.
 * Including the designated `INVALID` opcode, the EVM currently implements 141 opcodes, 65 of which are duplicates indicating the number of operands (`PUSHn`, `DUPn`, `SWAPn`, `LOGn`).
 
+#
 | Hex   | Name          | Gas   | Stack      | Mem / Storage | Notes |
 | :---: | :---          | :---: | :---       | :---          | :---  |
 |       |               |       | top, bottom|               |       |
