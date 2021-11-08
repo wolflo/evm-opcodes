@@ -23,7 +23,7 @@ Terms:
 
 Gas Calculation:
 - <code>gas\_cost = <em>C<sub>mem</sub>(new_state)</em> - <em>C<sub>mem</sub>(old_state)</em></code>
-- <code>gas\_cost = (new\_mem\_size\_words ^ 2 / 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
+- <code>gas\_cost = (new\_mem\_size\_words ^ 2 // 512) + (3 * new\_mem\_size\_words) - <em>C<sub>mem</sub>(old_state)</em></code>
 
 Useful Notes:
 - The following opcodes incur a memory expansion cost in addition to their otherwise static gas cost: `RETURN`, `REVERT`, `MLOAD`, `MSTORE`, `MSTORE8`.
