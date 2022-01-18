@@ -2,6 +2,7 @@
 Opcode costs are drawn from the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), the [Jello Paper](https://jellopaper.org/evm/), and the [geth](https://github.com/ethereum/go-ethereum) implementation.
 This is intended to be an accessible reference, but it is informal and does not address opcode semantics.
 If you want to be certain of correctness and aware of every edge case, I would suggest using the Jello Paper or a client implementation.
+If you are looking for an informal reference with more information about opcode semantics, try [evm.codes](https://www.evm.codes/).
 
 For operations with dynamic gas costs, see [gas.md](gas.md).
 
