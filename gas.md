@@ -8,8 +8,8 @@ Gas Calculation:
 - `gas_cost = 21000`: base cost
 - **If** `tx.to == null` (contract creation tx):
     - `gas_cost += 32000`
-- `gas_cost += 4 * bytes_zero`: gas added to base cost for every zero byte of memory data
-- `gas_cost += 16 * bytes_nonzero`: gas added to base cost for every nonzero byte of memory data
+- `gas_cost += 4 * bytes_zero`: gas added to base cost for every zero byte of calldata
+- `gas_cost += 16 * bytes_nonzero`: gas added to base cost for every nonzero byte of calldata
 
 ### A0-1: Memory Expansion
 An additional gas cost is paid by any operation that expands the memory that is in use.
