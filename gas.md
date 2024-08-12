@@ -269,7 +269,7 @@ A big piece of the gas calculation for these operations is determining the gas t
 There's a good chance that you are primarily interested in the `base_cost` and can ignore this additional calculation, because the `gas_sent_with_call` is consumed in the context of the called contract, and the unconsumed gas is returned.
 If not, see the `gas_sent_with_call` [section](#aa-f-gas-to-send-with-call-operations).
 
-Similar to selfdestruct, `CALL` incurs an additional cost if it forces an account to be added to the state trie by sending a nonzero amount of eth to an address that was previously empty.
+Similar to selfdestruct, `CALL` incurs an additional cost if it forces an account to be added to the state tree by sending a nonzero amount of eth to an address that was previously empty.
 "Empty", in this case is defined according to [EIP-161](https://eips.ethereum.org/EIPS/eip-161) (`balance == nonce == code == 0x`).
 
 Common Terms:
